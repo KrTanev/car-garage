@@ -26,10 +26,11 @@ export interface Translations {
     aboutCta: string;
     findUs: string;
     loginTitle: string;
-    accessCodeLabel: string;
+    emailLabel: string;
+    passwordLabel: string;
     loginButton: string;
     loggingIn: string;
-    incorrectCode: string;
+    loginError: string;
   };
   about: {
     title: (name: string) => string;
@@ -124,10 +125,11 @@ const bg: Translations = {
     aboutCta: 'Научете повече',
     findUs: 'Намерете ни',
     loginTitle: 'Вход за персонал',
-    accessCodeLabel: 'Код за достъп',
+    emailLabel: 'Имейл',
+    passwordLabel: 'Парола',
     loginButton: 'Вход',
     loggingIn: 'Проверка…',
-    incorrectCode: 'Грешен код за достъп.',
+    loginError: 'Невалиден имейл или парола.',
   },
   about: {
     title: (name) => `За ${name}`,
@@ -257,10 +259,11 @@ const en: Translations = {
     aboutCta: 'Learn more',
     findUs: 'Find us',
     loginTitle: 'Staff login',
-    accessCodeLabel: 'Access code',
+    emailLabel: 'Email',
+    passwordLabel: 'Password',
     loginButton: 'Log in',
     loggingIn: 'Checking…',
-    incorrectCode: 'Incorrect access code.',
+    loginError: 'Invalid email or password.',
   },
   about: {
     title: (name) => `About ${name}`,

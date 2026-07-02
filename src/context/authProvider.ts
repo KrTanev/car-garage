@@ -1,27 +1,44 @@
-// Pluggable auth provider.
+// Real authentication, via Firebase Auth — replaces the earlier
+// shared-passcode placeholder.
 //
-// This is a placeholder implementation: it checks a single shared passcode
-// client-side. There is no real security here (the code is visible in the
-// bundled JS) — it only exists so the login flow works end-to-end.
-//
-// To swap in real authentication later (Firebase Auth / Clerk / Supabase
-// Auth, etc.), replace the body of `login` below with a call to that
-// provider's SDK and keep the same function signature. Nothing else in the
-// app needs to change.
+// Admin model: there is no sign-up flow anywhere in this app. Every
+// account that can sign in was created by hand in the Firebase Console
+// (Authentication → Users → Add user). Being able to sign in at all is
+// what makes someone "staff" — there's no separate roles/permissions
+// layer on top of that, which matches this being a small, single-shop
+// tool rather than a multi-tenant product.
 
-const PLACEHOLDER_ACCESS_CODE = import.meta.env.VITE_ACCESS_CODE ?? 'solidcars';
+import {
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  type User,
+} from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export interface AuthCredentials {
-  passcode: string;
+  email: string;
+  password: string;
 }
 
 export async function login(credentials: AuthCredentials): Promise<boolean> {
-  // Simulate an async call so the calling code already handles loading /
-  // error states correctly once real auth is wired in.
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  return credentials.passcode === PLACEHOLDER_ACCESS_CODE;
+  try {
+    await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+    return true;
+  } catch {
+    // Wrong email/password, disabled account, unknown user, etc. — the UI
+    // only needs a pass/fail signal, not which Firebase error code it was.
+    return false;
+  }
 }
 
 export async function logout(): Promise<void> {
-  // No-op for the placeholder provider.
+  await firebaseSignOut(auth);
+}
+
+// Fires immediately with the current state, then again whenever sign-in
+// state changes (including Firebase restoring a persisted session on page
+// load). Returns the unsubscribe function.
+export function onAuthChange(callback: (user: User | null) => void): () => void {
+  return onAuthStateChanged(auth, callback);
 }

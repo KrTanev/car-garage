@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import {
   emptyInvoice,
@@ -21,7 +21,7 @@ function isCarMake(value: string): value is CarMake {
 
 export function Documents() {
   const [invoice, setInvoice] = useState<InvoiceData>(emptyInvoice());
-  const [history, setHistory] = useState<InvoiceRecord[]>(() => getInvoiceHistory());
+  const [history, setHistory] = useState<InvoiceRecord[]>([]);
   // Guards against React StrictMode's double-invoke in dev, which would
   // otherwise burn two numbers off the counter for a single mount.
   const numberAssigned = useRef(false);
@@ -38,22 +38,46 @@ export function Documents() {
     setInvoice((prev) => ({ ...prev, [key]: value }));
   }
 
+  const refreshHistory = useCallback(async () => {
+    try {
+      setHistory(await getInvoiceHistory());
+    } catch (err) {
+      console.error('Failed to load invoice history', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshHistory();
+  }, [refreshHistory]);
+
   useEffect(() => {
     if (numberAssigned.current) return;
     numberAssigned.current = true;
-    setInvoice((prev) => ({ ...prev, invoiceNumber: getNextInvoiceNumber() }));
+    (async () => {
+      try {
+        const number = await getNextInvoiceNumber();
+        setInvoice((prev) => ({ ...prev, invoiceNumber: number }));
+      } catch (err) {
+        console.error('Failed to generate invoice number', err);
+      }
+    })();
   }, []);
 
   function handleDownloadClick() {
-    recordInvoice({
-      number: invoice.invoiceNumber,
-      date: invoice.date,
-      customerName: invoice.customerName,
-      vehicle: [invoice.vehicleMake, invoice.vehicleModel].filter(Boolean).join(' '),
-      total: invoiceTotal(invoice),
-      createdAt: new Date().toISOString(),
-    });
-    setHistory(getInvoiceHistory());
+    (async () => {
+      try {
+        await recordInvoice({
+          number: invoice.invoiceNumber,
+          date: invoice.date,
+          customerName: invoice.customerName,
+          vehicle: [invoice.vehicleMake, invoice.vehicleModel].filter(Boolean).join(' '),
+          total: invoiceTotal(invoice),
+        });
+        await refreshHistory();
+      } catch (err) {
+        console.error('Failed to record invoice', err);
+      }
+    })();
   }
 
   function handleMakeChange(value: string) {
@@ -309,7 +333,7 @@ export function Documents() {
         ) : (
           <ul className="history-list">
             {history.map((record) => (
-              <li className="history-item" key={record.createdAt}>
+              <li className="history-item" key={record.id}>
                 <div>
                   <span className="history-number">{record.number}</span>
                   <span className="history-meta">

@@ -19,20 +19,70 @@ Open the printed local URL. On mobile, use your phone on the same network
 and Vite's `--host` flag, or just resize your browser — the layout is
 responsive down to phone widths.
 
-## Login (placeholder auth)
+## Backend: Firebase
 
-There's no backend, so the login is currently a single shared access code
-checked in the browser (`src/context/authProvider.ts`). This is **not real
-security** — the code ships in the JS bundle — it exists only so the
-login → protected page flow works end-to-end.
+There's no custom server, but staff login and invoice data are backed by a
+real [Firebase](https://firebase.google.com) project (free "Spark" tier
+covers this app's usage comfortably):
 
-- Default code: `solidcars`
-- Override it locally with a `.env.local` file: `VITE_ACCESS_CODE=yourcode`
+- **Firebase Authentication** (Email/Password provider) — real staff logins,
+  replacing the old shared-passcode placeholder.
+- **Firestore** — the shared invoice counter and invoice history, replacing
+  the old `localStorage`-only tracking. Every device now reads/writes the
+  same data.
 
-**To do later:** replace `authProvider.ts` with a real provider (Firebase
-Auth, Clerk, Supabase Auth, etc. — all free tier, all backend-free from your
-side). The rest of the app (`AuthContext`, `ProtectedRoute`) doesn't need to
-change.
+### One-time Firebase project setup
+
+1. Go to the [Firebase console](https://console.firebase.google.com) →
+   create a project (Google Analytics not needed).
+2. **Build → Authentication → Get started → Sign-in method → Email/Password
+   → enable.**
+3. **Build → Authentication → Users → Add user** for each staff member who
+   should be able to log in. There is **no public sign-up** — accounts are
+   only ever created here, manually, by whoever administers the project. Any
+   account that exists is trusted staff.
+4. **Build → Firestore Database → Create database** (production mode,
+   pick a region).
+5. Deploy the security rules in this repo (`firestore.rules`) — either paste
+   them into the Firestore **Rules** tab in the console, or run
+   `firebase deploy --only firestore:rules` with the [Firebase
+   CLI](https://firebase.google.com/docs/cli) (`npm install -g
+   firebase-tools`, `firebase login`, `firebase use --add`).
+6. **Project settings (gear icon) → General → Your apps → Add app → Web**.
+   Copy the resulting config values — you'll need all six for the next step.
+
+### Local environment variables
+
+Create a `.env.local` file (already gitignored) with the six values from
+step 6 above:
+
+```
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+These values aren't secret in the traditional sense — every Firebase web app
+ships them in its public JS bundle by design. Real access control lives in
+`firestore.rules`, not in hiding these values.
+
+### Local emulator (optional, no real Firebase project needed)
+
+To develop without touching real cloud data, run the [Firebase Local
+Emulator Suite](https://firebase.google.com/docs/emulator-suite) (requires
+Java): `firebase emulators:start --only auth,firestore` (config in
+`firebase.json`), and set `VITE_USE_FIREBASE_EMULATOR=true` in `.env.local`
+so `src/lib/firebase.ts` connects to it instead of production.
+
+### GitHub Actions secrets
+
+For the deploy workflow to build with these values, add the same six as
+repo secrets: **Settings → Secrets and variables → Actions → New repository
+secret**, one per `VITE_FIREBASE_*` name above. See
+`.github/workflows/deploy.yml`.
 
 ## Map location
 
@@ -56,24 +106,19 @@ Fields and layout live in:
 Add more document types by following the same pattern (a data type, a form,
 a `@react-pdf/renderer` document component) and a new route in `src/App.tsx`.
 
-## Invoice numbering (local-only — read before relying on this)
+## Invoice numbering (Firestore-backed)
 
 Invoice numbers are auto-generated (`INV-2026-0001`, sequential per calendar
-year, resets each January) by `src/lib/invoiceStore.ts`. A "Recent invoices"
-list on the Documents page shows what's been generated.
+year, resets each January) by `src/lib/invoiceStore.ts`, using a Firestore
+transaction (`counters/{year}`) so concurrent staff on different devices
+never collide. A "Recent invoices" list on the Documents page reads the
+last 20 invoices from the shared `invoices` collection.
 
-**This is stored in `localStorage` — one browser, one device.** It is not
-synced anywhere. Two people generating invoices from two different
-computers will each have their own counter and can produce the same
-number. This is fine if invoicing only ever happens from one shop
-computer; it is not fine for multi-device use.
-
-**Planned fix:** migrate `invoiceStore.ts` to a shared backend (Firebase or
-Supabase, free tier) so the counter and history live in one place every
-device reads from — this is also the natural moment to replace the
-placeholder login with that backend's real auth. Nothing outside
-`invoiceStore.ts` should need to change when that happens; `Documents.tsx`
-only calls `getNextInvoiceNumber()` / `recordInvoice()` / `getInvoiceHistory()`.
+Every generated invoice is written to Firestore with `createdBy` set to the
+signed-in staff member's UID; `firestore.rules` only allows a signed-in user
+to create invoices under their own UID, and disallows update/delete
+entirely (append-only history). See `firestore.rules` for the full rule
+set, and the Firebase setup section above for how to deploy it.
 
 ## Deployment
 

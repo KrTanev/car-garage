@@ -1,18 +1,29 @@
-// Local, browser-only invoice numbering + history.
+// Firestore-backed invoice numbering + history — replaces the earlier
+// localStorage version. This is what makes the counter and history truly
+// shared across every device/browser, which localStorage never could.
 //
-// LIMITATION: this is stored in this browser's localStorage only. Numbers
-// and history do NOT sync across devices — two computers generating
-// invoices independently can produce the same number. That's an accepted
-// tradeoff for now (see README); the planned fix is migrating this module
-// to a shared backend (Firebase/Supabase) so the counter and history live
-// in one place every device reads from. Nothing outside this file should
-// need to change when that happens — callers just get numbers/records.
+// Function names/shapes are kept the same as the old module on purpose
+// (just async now) so callers barely changed. Access control is entirely
+// in firestore.rules — see that file for the actual security story.
 
-const COUNTER_KEY = 'car-garage-invoice-counter';
-const HISTORY_KEY = 'car-garage-invoice-history';
-const MAX_HISTORY = 200; // keep localStorage usage bounded
+import {
+  collection,
+  doc,
+  runTransaction,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  Timestamp,
+} from 'firebase/firestore';
+import { db, auth } from './firebase';
+
+const MAX_HISTORY = 200;
 
 export interface InvoiceRecord {
+  id: string;
   number: string;
   date: string;
   customerName: string;
@@ -21,49 +32,52 @@ export interface InvoiceRecord {
   createdAt: string;
 }
 
-interface CounterState {
-  year: number;
-  lastNumber: number;
+// Sequential per calendar year: INV-2026-0001, INV-2026-0002, ... resets
+// to 0001 when the year rolls over. The increment happens inside a
+// Firestore transaction, so it stays correct even if two devices generate
+// an invoice at the same moment — the old localStorage version had no way
+// to guarantee that.
+export async function getNextInvoiceNumber(): Promise<string> {
+  const year = new Date().getFullYear();
+  const counterRef = doc(db, 'counters', String(year));
+
+  const next = await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(counterRef);
+    const current = (snap.data()?.lastNumber as number | undefined) ?? 0;
+    const updated = current + 1;
+    transaction.set(counterRef, { lastNumber: updated });
+    return updated;
+  });
+
+  return `INV-${year}-${String(next).padStart(4, '0')}`;
 }
 
-function readCounter(): CounterState {
-  try {
-    const raw = localStorage.getItem(COUNTER_KEY);
-    if (raw) return JSON.parse(raw) as CounterState;
-  } catch {
-    // malformed/corrupt storage — fall through to a fresh counter rather
-    // than throwing, since a wrong-but-working number beats a crash
-  }
-  return { year: new Date().getFullYear(), lastNumber: 0 };
+export async function recordInvoice(
+  record: Omit<InvoiceRecord, 'id' | 'createdAt'>,
+): Promise<void> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Cannot record an invoice while signed out.');
+  await addDoc(collection(db, 'invoices'), {
+    ...record,
+    createdBy: uid,
+    createdAt: serverTimestamp(),
+  });
 }
 
-function writeCounter(state: CounterState) {
-  localStorage.setItem(COUNTER_KEY, JSON.stringify(state));
-}
-
-// Sequential per calendar year: INV-2026-0001, INV-2026-0002, ... resets to
-// 0001 when the year rolls over. Call exactly once per new invoice draft.
-export function getNextInvoiceNumber(): string {
-  const currentYear = new Date().getFullYear();
-  const state = readCounter();
-  const next = state.year === currentYear ? state.lastNumber + 1 : 1;
-  writeCounter({ year: currentYear, lastNumber: next });
-  return `INV-${currentYear}-${String(next).padStart(4, '0')}`;
-}
-
-export function recordInvoice(record: InvoiceRecord) {
-  const history = getInvoiceHistory();
-  history.unshift(record);
-  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-}
-
-export function getInvoiceHistory(): InvoiceRecord[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    if (raw) return JSON.parse(raw) as InvoiceRecord[];
-  } catch {
-    // malformed/corrupt storage — treat as empty rather than throwing
-  }
-  return [];
+export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
+  const q = query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(MAX_HISTORY));
+  const snap = await getDocs(q);
+  return snap.docs.map((docSnap) => {
+    const data = docSnap.data();
+    const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
+    return {
+      id: docSnap.id,
+      number: data.number,
+      date: data.date,
+      customerName: data.customerName,
+      vehicle: data.vehicle,
+      total: data.total,
+      createdAt: createdAt.toISOString(),
+    };
+  });
 }

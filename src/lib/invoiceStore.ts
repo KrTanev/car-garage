@@ -1,16 +1,16 @@
-// Firestore-backed invoice numbering + history — replaces the earlier
-// localStorage version. This is what makes the counter and history truly
-// shared across every device/browser, which localStorage never could.
-//
-// Function names/shapes are kept the same as the old module on purpose
-// (just async now) so callers barely changed. Access control is entirely
-// in firestore.rules — see that file for the actual security story.
+// Firestore-backed invoice storage: numbering, create, read, update, delete.
+// Every field of the invoice form is stored (not just a summary) so a past
+// invoice can be re-downloaded as an identical PDF or edited later. Access
+// control is entirely in firestore.rules — see that file for the actual
+// security story.
 
 import {
   collection,
   doc,
   runTransaction,
   addDoc,
+  updateDoc,
+  deleteDoc,
   serverTimestamp,
   query,
   orderBy,
@@ -19,24 +19,21 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import type { InvoiceData } from '../types/invoice';
 
 const MAX_HISTORY = 200;
 
-export interface InvoiceRecord {
+export interface InvoiceRecord extends InvoiceData {
   id: string;
-  number: string;
-  date: string;
-  customerName: string;
-  vehicle: string;
-  total: number;
+  createdBy: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // Sequential per calendar year: INV-2026-0001, INV-2026-0002, ... resets
 // to 0001 when the year rolls over. The increment happens inside a
 // Firestore transaction, so it stays correct even if two devices generate
-// an invoice at the same moment — the old localStorage version had no way
-// to guarantee that.
+// an invoice at the same moment.
 export async function getNextInvoiceNumber(): Promise<string> {
   const year = new Date().getFullYear();
   const counterRef = doc(db, 'counters', String(year));
@@ -52,16 +49,29 @@ export async function getNextInvoiceNumber(): Promise<string> {
   return `INV-${year}-${String(next).padStart(4, '0')}`;
 }
 
-export async function recordInvoice(
-  record: Omit<InvoiceRecord, 'id' | 'createdAt'>,
-): Promise<void> {
+// Creates a brand-new invoice document. Only for genuinely new invoices —
+// use updateInvoice() to edit an existing one (it keeps the same id, so
+// editing never touches the invoice-number counter).
+export async function createInvoice(data: InvoiceData): Promise<string> {
   const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error('Cannot record an invoice while signed out.');
-  await addDoc(collection(db, 'invoices'), {
-    ...record,
+  if (!uid) throw new Error('Cannot create an invoice while signed out.');
+  const docRef = await addDoc(collection(db, 'invoices'), {
+    ...data,
     createdBy: uid,
     createdAt: serverTimestamp(),
   });
+  return docRef.id;
+}
+
+export async function updateInvoice(id: string, data: InvoiceData): Promise<void> {
+  await updateDoc(doc(db, 'invoices', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteInvoice(id: string): Promise<void> {
+  await deleteDoc(doc(db, 'invoices', id));
 }
 
 export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
@@ -70,14 +80,25 @@ export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
   return snap.docs.map((docSnap) => {
     const data = docSnap.data();
     const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
+    const updatedAt = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : undefined;
     return {
       id: docSnap.id,
-      number: data.number,
+      invoiceNumber: data.invoiceNumber,
       date: data.date,
       customerName: data.customerName,
-      vehicle: data.vehicle,
-      total: data.total,
+      customerPhone: data.customerPhone,
+      customerEmail: data.customerEmail,
+      vehicleMake: data.vehicleMake,
+      vehicleModel: data.vehicleModel,
+      vehiclePlate: data.vehiclePlate,
+      vehicleVin: data.vehicleVin,
+      odometer: data.odometer,
+      items: data.items,
+      laborCost: data.laborCost,
+      notes: data.notes,
+      createdBy: data.createdBy,
       createdAt: createdAt.toISOString(),
+      updatedAt: updatedAt?.toISOString(),
     };
   });
 }

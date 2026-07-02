@@ -41,7 +41,13 @@ export interface Translations {
     gallery: Record<GalleryId, string>;
   };
   documents: {
+    title: string;
+    newInvoiceButton: string;
     newInvoiceTitle: string;
+    editInvoiceTitle: (number: string) => string;
+    cancelButton: string;
+    saveChangesButton: string;
+    saving: string;
     invoiceSection: string;
     invoiceNumber: string;
     date: string;
@@ -73,8 +79,17 @@ export interface Translations {
     total: (amount: string) => string;
     downloadButton: string;
     preparingPdf: string;
-    historyTitle: string;
-    historyEmpty: string;
+    tableEmpty: string;
+    colNumber: string;
+    colDate: string;
+    colCustomer: string;
+    colVehicle: string;
+    colTotal: string;
+    colActions: string;
+    editAction: string;
+    downloadAction: string;
+    deleteAction: string;
+    deleteConfirm: (number: string) => string;
   };
   footer: {
     hoursTitle: string;
@@ -171,7 +186,13 @@ const bg: Translations = {
     },
   },
   documents: {
+    title: 'Фактури',
+    newInvoiceButton: '+ Нова фактура',
     newInvoiceTitle: 'Нова фактура за ремонт',
+    editInvoiceTitle: (number) => `Редакция на фактура ${number}`,
+    cancelButton: 'Отказ',
+    saveChangesButton: 'Запази промените',
+    saving: 'Запазване…',
     invoiceSection: 'Фактура',
     invoiceNumber: 'Фактура №',
     date: 'Дата',
@@ -203,8 +224,17 @@ const bg: Translations = {
     total: (amount) => `Общо: ${amount}`,
     downloadButton: 'Изтегли фактура PDF',
     preparingPdf: 'Подготовка на PDF…',
-    historyTitle: 'Последни фактури',
-    historyEmpty: 'Все още няма генерирани фактури.',
+    tableEmpty: 'Все още няма генерирани фактури.',
+    colNumber: 'Фактура №',
+    colDate: 'Дата',
+    colCustomer: 'Клиент',
+    colVehicle: 'Автомобил',
+    colTotal: 'Общо',
+    colActions: 'Действия',
+    editAction: 'Редактирай',
+    downloadAction: 'Изтегли',
+    deleteAction: 'Изтрий',
+    deleteConfirm: (number) => `Изтриване на фактура ${number}? Това действие не може да бъде отменено.`,
   },
   footer: {
     hoursTitle: 'Работно време',
@@ -305,7 +335,13 @@ const en: Translations = {
     },
   },
   documents: {
+    title: 'Invoices',
+    newInvoiceButton: '+ New invoice',
     newInvoiceTitle: 'New repair invoice',
+    editInvoiceTitle: (number) => `Edit invoice ${number}`,
+    cancelButton: 'Cancel',
+    saveChangesButton: 'Save changes',
+    saving: 'Saving…',
     invoiceSection: 'Invoice',
     invoiceNumber: 'Invoice #',
     date: 'Date',
@@ -337,8 +373,17 @@ const en: Translations = {
     total: (amount) => `Total: ${amount}`,
     downloadButton: 'Download invoice PDF',
     preparingPdf: 'Preparing PDF…',
-    historyTitle: 'Recent invoices',
-    historyEmpty: 'No invoices generated yet.',
+    tableEmpty: 'No invoices generated yet.',
+    colNumber: 'Invoice #',
+    colDate: 'Date',
+    colCustomer: 'Customer',
+    colVehicle: 'Vehicle',
+    colTotal: 'Total',
+    colActions: 'Actions',
+    editAction: 'Edit',
+    downloadAction: 'Download',
+    deleteAction: 'Delete',
+    deleteConfirm: (number) => `Delete invoice ${number}? This can't be undone.`,
   },
   footer: {
     hoursTitle: 'Working hours',

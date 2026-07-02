@@ -114,11 +114,19 @@ transaction (`counters/{year}`) so concurrent staff on different devices
 never collide. A "Recent invoices" list on the Documents page reads the
 last 20 invoices from the shared `invoices` collection.
 
-Every generated invoice is written to Firestore with `createdBy` set to the
-signed-in staff member's UID; `firestore.rules` only allows a signed-in user
-to create invoices under their own UID, and disallows update/delete
-entirely (append-only history). See `firestore.rules` for the full rule
-set, and the Firebase setup section above for how to deploy it.
+Every invoice is written to Firestore with `createdBy` set to the creating
+staff member's UID, but any signed-in staff member can edit or delete any
+invoice afterward — same trust model as everything else here (any account
+that exists is trusted staff). The one thing `firestore.rules` blocks is
+reassigning an invoice's `createdBy` to someone else on update. See
+`firestore.rules` for the full rule set, and the Firebase setup section
+above for how to deploy it.
+
+The Documents page (`src/pages/Documents.tsx`) is a table of all invoices
+with row actions to edit, download, or delete, plus a "+ New invoice"
+button that opens the same form for creating one. Editing preserves the
+original invoice number; deleting is immediate (no undo) after a
+confirmation prompt.
 
 ## Deployment
 

@@ -61,7 +61,7 @@ textarea {
 
 /* Logo */
 .logo {
-  height: 46px;
+  height: 69px;
   width: auto;
   display: block;
 }
@@ -155,6 +155,17 @@ textarea {
   max-width: 240px;
 }
 
+.footer-logo {
+  display: flex;
+  align-items: center;
+}
+
+.footer-logo img {
+  height: 40px;
+  width: auto;
+  opacity: 0.9;
+}
+
 .site-footer p {
   margin: 0 0 6px;
   font-size: 0.9rem;
@@ -168,8 +179,8 @@ textarea {
 
 .footer-copy {
   max-width: 960px;
-  margin: 32px auto 0;
-  padding-top: 20px;
+  margin: 16px auto 0;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.8rem;
@@ -314,13 +325,22 @@ button {
 .icon-button {
   background: transparent;
   border: 1px solid var(--border);
-  color: var(--danger);
+  color: var(--text-muted);
   padding: 6px 10px;
+}
+
+.icon-button.danger {
+  color: var(--danger);
+}
+
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* Documents page */
 .documents {
-  max-width: 760px;
+  max-width: 880px;
   margin: 0 auto;
   padding: 24px 16px 64px;
 }
@@ -331,6 +351,11 @@ button {
   justify-content: space-between;
   margin-bottom: 20px;
   gap: 12px;
+}
+
+.documents-header .secondary,
+.documents-header .primary {
+  width: auto;
 }
 
 .invoice-form section {
@@ -396,51 +421,63 @@ button {
   width: 100%;
 }
 
+.form-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.form-actions .primary,
+.form-actions .secondary {
+  width: auto;
+  flex: 1;
+}
+
 .invoice-form input[readonly] {
   background: var(--surface);
   color: var(--text-muted);
 }
 
-/* Invoice history */
-.invoice-history {
-  max-width: 760px;
-  margin: 32px auto 0;
-  padding: 0 16px;
-}
-
-.history-empty {
+/* Invoice table */
+.table-empty {
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
-.history-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: var(--surface);
+.invoice-table-wrapper {
+  overflow-x: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 16px;
+  background: var(--surface);
 }
 
-.history-number {
-  font-weight: 600;
-  margin-right: 8px;
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
-.history-meta {
+.invoice-table th,
+.invoice-table td {
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.invoice-table th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.invoice-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
 }
 
 /* About page */
@@ -546,5 +583,9 @@ button {
   .footer-grid {
     flex-direction: row;
     gap: 64px;
+  }
+
+  .footer-logo {
+    margin-left: auto;
   }
 }

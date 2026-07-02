@@ -11,21 +11,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Generated invoices. Readable/creatable by any signed-in staff
-    // member. Immutable once created — no edits or deletes from the
-    // client, so the history can't be silently altered after the fact.
+    // Generated invoices. Readable/creatable/editable/deletable by any
+    // signed-in staff member — any account that exists is trusted, so one
+    // staffer can fix another's typo or remove a bad entry. The one thing
+    // nobody can do is reassign an invoice's createdBy to someone else.
     match /invoices/{invoiceId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.createdBy == request.auth.uid;
-      allow update, delete: if false;
+      allow update: if request.auth != null
+        && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if request.auth != null;
     }
 
     // Per-year invoice number counters (doc id = the year, e.g. "2026").
-    // Read/write requires sign-in; the atomic increment itself happens
-    // client-side inside a Firestore transaction (see invoiceStore.ts).
+    // The atomic increment itself happens client-side inside a Firestore
+    // transaction (see invoiceStore.ts), but the rules also enforce the
+    // shape directly: lastNumber must be a positive integer that only ever
+    // moves forward, so a buggy or malicious client can't reset it, set it
+    // negative, or overwrite it with a non-numeric value.
     match /counters/{year} {
-      allow read, write: if request.auth != null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.data.lastNumber is int
+        && request.resource.data.lastNumber > 0
+        && (resource == null || request.resource.data.lastNumber > resource.data.lastNumber);
     }
 
     // Deny everything else by default.

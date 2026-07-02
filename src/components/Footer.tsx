@@ -1,5 +1,6 @@
-import { BUSINESS_INFO, HOURS } from '../data/business';
-import { useLanguage } from '../context/LanguageContext';
+import { BUSINESS_INFO, HOURS } from "../data/business";
+import { useLanguage } from "../context/LanguageContext";
+import logoIcon from "../assets/logo-icon.png";
 
 export function Footer() {
   const { t } = useLanguage();
@@ -22,14 +23,22 @@ export function Footer() {
         <div>
           <h3>{t.footer.contactTitle}</h3>
           <p>
-            <a href={`tel:${BUSINESS_INFO.phone.replace(/\s+/g, '')}`}>{BUSINESS_INFO.phone}</a>
+            <a href={`tel:${BUSINESS_INFO.phone.replace(/\s+/g, "")}`}>
+              {BUSINESS_INFO.phone}
+            </a>
           </p>
           <p>
             {BUSINESS_INFO.addressStreet}, {t.common.cityCountry}
           </p>
         </div>
+        <div className="footer-logo">
+          <img src={logoIcon} alt={BUSINESS_INFO.name} />
+        </div>
       </div>
-      <p className="footer-copy">{t.footer.rightsReserved(year, BUSINESS_INFO.name)}</p>
+
+      <p className="footer-copy">
+        {t.footer.rightsReserved(year, BUSINESS_INFO.name)}
+      </p>
     </footer>
   );
 }

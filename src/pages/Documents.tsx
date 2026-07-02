@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import { useCallback, useEffect, useState } from 'react';
 import {
   emptyInvoice,
   emptyLineItem,
@@ -9,9 +8,16 @@ import {
   type InvoiceData,
 } from '../types/invoice';
 import { CAR_MAKES, CAR_MODELS, type CarMake } from '../data/carCatalog';
-import { InvoiceDocument } from '../pdf/InvoiceDocument';
 import { useLanguage } from '../context/LanguageContext';
-import { getNextInvoiceNumber, recordInvoice, getInvoiceHistory, type InvoiceRecord } from '../lib/invoiceStore';
+import { downloadInvoicePdf } from '../pdf/downloadInvoicePdf';
+import {
+  getNextInvoiceNumber,
+  createInvoice,
+  updateInvoice,
+  deleteInvoice,
+  getInvoiceHistory,
+  type InvoiceRecord,
+} from '../lib/invoiceStore';
 
 const OTHER = 'other';
 
@@ -19,12 +25,24 @@ function isCarMake(value: string): value is CarMake {
   return (CAR_MAKES as readonly string[]).includes(value);
 }
 
+// Given a saved make/model value, figures out what a <select> should show:
+// the known option, "other" (with the raw value living in the text field
+// next to it), or blank.
+function choiceFor(value: string, options: readonly string[]): string {
+  if (!value) return '';
+  return options.includes(value) ? value : OTHER;
+}
+
+type View = 'list' | 'form';
+
 export function Documents() {
+  const [view, setView] = useState<View>('list');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<InvoiceData>(emptyInvoice());
   const [history, setHistory] = useState<InvoiceRecord[]>([]);
-  // Guards against React StrictMode's double-invoke in dev, which would
-  // otherwise burn two numbers off the counter for a single mount.
-  const numberAssigned = useRef(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [rowBusyId, setRowBusyId] = useState<string | null>(null);
   // Tracks the raw <select> value ('', a known make/model, or 'other') —
   // decoupled from invoice.vehicleMake/vehicleModel because when "Other" is
   // selected, the select shows 'other' while the invoice holds whatever the
@@ -39,10 +57,13 @@ export function Documents() {
   }
 
   const refreshHistory = useCallback(async () => {
+    setIsLoadingHistory(true);
     try {
       setHistory(await getInvoiceHistory());
     } catch (err) {
       console.error('Failed to load invoice history', err);
+    } finally {
+      setIsLoadingHistory(false);
     }
   }, []);
 
@@ -50,34 +71,118 @@ export function Documents() {
     refreshHistory();
   }, [refreshHistory]);
 
-  useEffect(() => {
-    if (numberAssigned.current) return;
-    numberAssigned.current = true;
-    (async () => {
-      try {
-        const number = await getNextInvoiceNumber();
-        setInvoice((prev) => ({ ...prev, invoiceNumber: number }));
-      } catch (err) {
-        console.error('Failed to generate invoice number', err);
-      }
-    })();
-  }, []);
+  async function openNewInvoice() {
+    setInvoice(emptyInvoice());
+    setMakeChoice('');
+    setModelChoice('');
+    setEditingId(null);
+    setView('form');
+    try {
+      const number = await getNextInvoiceNumber();
+      setInvoice((prev) => ({ ...prev, invoiceNumber: number }));
+    } catch (err) {
+      console.error('Failed to generate invoice number', err);
+    }
+  }
 
-  function handleDownloadClick() {
-    (async () => {
-      try {
-        await recordInvoice({
-          number: invoice.invoiceNumber,
-          date: invoice.date,
-          customerName: invoice.customerName,
-          vehicle: [invoice.vehicleMake, invoice.vehicleModel].filter(Boolean).join(' '),
-          total: invoiceTotal(invoice),
-        });
-        await refreshHistory();
-      } catch (err) {
-        console.error('Failed to record invoice', err);
-      }
-    })();
+  function openEditInvoice(record: InvoiceRecord) {
+    // Pick out just the editable invoice fields — record also carries
+    // Firestore metadata (id, createdBy, createdAt, updatedAt) that
+    // shouldn't end up back in the form state.
+    const data: InvoiceData = {
+      invoiceNumber: record.invoiceNumber,
+      date: record.date,
+      customerName: record.customerName,
+      customerPhone: record.customerPhone,
+      customerEmail: record.customerEmail,
+      vehicleMake: record.vehicleMake,
+      vehicleModel: record.vehicleModel,
+      vehiclePlate: record.vehiclePlate,
+      vehicleVin: record.vehicleVin,
+      odometer: record.odometer,
+      items: record.items,
+      laborCost: record.laborCost,
+      notes: record.notes,
+    };
+    setInvoice(data);
+    setMakeChoice(choiceFor(data.vehicleMake, CAR_MAKES));
+    const knownMake = isCarMake(data.vehicleMake) ? data.vehicleMake : null;
+    setModelChoice(knownMake ? choiceFor(data.vehicleModel, CAR_MODELS[knownMake]) : '');
+    setEditingId(record.id);
+    setView('form');
+  }
+
+  function cancelForm() {
+    setView('list');
+    setEditingId(null);
+    setInvoice(emptyInvoice());
+  }
+
+  async function handleCreateAndDownload() {
+    setIsSaving(true);
+    try {
+      await createInvoice(invoice);
+      await downloadInvoicePdf(invoice, t.pdf);
+      await refreshHistory();
+      setView('list');
+      setEditingId(null);
+      setInvoice(emptyInvoice());
+    } catch (err) {
+      console.error('Failed to create invoice', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleSaveChanges() {
+    if (!editingId) return;
+    setIsSaving(true);
+    try {
+      await updateInvoice(editingId, invoice);
+      await refreshHistory();
+      setView('list');
+      setEditingId(null);
+      setInvoice(emptyInvoice());
+    } catch (err) {
+      console.error('Failed to save invoice', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDownloadCurrent() {
+    setIsSaving(true);
+    try {
+      await downloadInvoicePdf(invoice, t.pdf);
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleRowDownload(record: InvoiceRecord) {
+    setRowBusyId(record.id);
+    try {
+      await downloadInvoicePdf(record, t.pdf);
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+    } finally {
+      setRowBusyId(null);
+    }
+  }
+
+  async function handleRowDelete(record: InvoiceRecord) {
+    if (!window.confirm(d.deleteConfirm(record.invoiceNumber))) return;
+    setRowBusyId(record.id);
+    try {
+      await deleteInvoice(record.id);
+      await refreshHistory();
+    } catch (err) {
+      console.error('Failed to delete invoice', err);
+    } finally {
+      setRowBusyId(null);
+    }
   }
 
   function handleMakeChange(value: string) {
@@ -112,12 +217,95 @@ export function Documents() {
     }));
   }
 
-  const fileName = `invoice-${invoice.invoiceNumber || 'draft'}.pdf`;
+  if (view === 'list') {
+    return (
+      <main className="documents">
+        <header className="documents-header">
+          <h1>{d.title}</h1>
+          <button type="button" className="primary new-invoice-button" onClick={openNewInvoice}>
+            {d.newInvoiceButton}
+          </button>
+        </header>
+
+        {isLoadingHistory ? (
+          <p className="loading">…</p>
+        ) : history.length === 0 ? (
+          <p className="table-empty">{d.tableEmpty}</p>
+        ) : (
+          <div className="invoice-table-wrapper">
+            <table className="invoice-table">
+              <thead>
+                <tr>
+                  <th>{d.colNumber}</th>
+                  <th>{d.colDate}</th>
+                  <th>{d.colCustomer}</th>
+                  <th>{d.colVehicle}</th>
+                  <th>{d.colTotal}</th>
+                  <th>{d.colActions}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((record) => {
+                  const busy = rowBusyId === record.id;
+                  return (
+                    <tr key={record.id}>
+                      <td>{record.invoiceNumber}</td>
+                      <td>{record.date}</td>
+                      <td>{record.customerName || '—'}</td>
+                      <td>
+                        {[record.vehicleMake, record.vehicleModel].filter(Boolean).join(' ') || '—'}
+                      </td>
+                      <td>{formatMoney(invoiceTotal(record))}</td>
+                      <td className="row-actions">
+                        <button
+                          type="button"
+                          className="icon-button"
+                          disabled={busy}
+                          onClick={() => openEditInvoice(record)}
+                          aria-label={d.editAction}
+                          title={d.editAction}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-button"
+                          disabled={busy}
+                          onClick={() => handleRowDownload(record)}
+                          aria-label={d.downloadAction}
+                          title={d.downloadAction}
+                        >
+                          ⬇
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-button danger"
+                          disabled={busy}
+                          onClick={() => handleRowDelete(record)}
+                          aria-label={d.deleteAction}
+                          title={d.deleteAction}
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </main>
+    );
+  }
 
   return (
     <main className="documents">
       <header className="documents-header">
-        <h1>{d.newInvoiceTitle}</h1>
+        <h1>{editingId ? d.editInvoiceTitle(invoice.invoiceNumber) : d.newInvoiceTitle}</h1>
+        <button type="button" className="secondary" onClick={cancelForm}>
+          {d.cancelButton}
+        </button>
       </header>
 
       <form className="invoice-form" onSubmit={(e) => e.preventDefault()}>
@@ -273,7 +461,7 @@ export function Documents() {
                 />
                 <button
                   type="button"
-                  className="icon-button"
+                  className="icon-button danger"
                   onClick={() => removeItem(item.id)}
                   aria-label={d.removeItem}
                 >
@@ -316,38 +504,38 @@ export function Documents() {
           <strong>{d.total(formatMoney(invoiceTotal(invoice)))}</strong>
         </div>
 
-        <PDFDownloadLink
-          document={<InvoiceDocument data={invoice} t={t.pdf} />}
-          fileName={fileName}
-          className="primary download-button"
-          onClick={handleDownloadClick}
-        >
-          {({ loading }) => (loading ? d.preparingPdf : d.downloadButton)}
-        </PDFDownloadLink>
+        <div className="form-actions">
+          {editingId ? (
+            <>
+              <button
+                type="button"
+                className="primary"
+                disabled={isSaving}
+                onClick={handleSaveChanges}
+              >
+                {isSaving ? d.saving : d.saveChangesButton}
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                disabled={isSaving}
+                onClick={handleDownloadCurrent}
+              >
+                {isSaving ? d.preparingPdf : d.downloadButton}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="primary download-button"
+              disabled={isSaving}
+              onClick={handleCreateAndDownload}
+            >
+              {isSaving ? d.preparingPdf : d.downloadButton}
+            </button>
+          )}
+        </div>
       </form>
-
-      <section className="invoice-history">
-        <h2>{d.historyTitle}</h2>
-        {history.length === 0 ? (
-          <p className="history-empty">{d.historyEmpty}</p>
-        ) : (
-          <ul className="history-list">
-            {history.map((record) => (
-              <li className="history-item" key={record.id}>
-                <div>
-                  <span className="history-number">{record.number}</span>
-                  <span className="history-meta">
-                    {record.date}
-                    {record.customerName ? ` · ${record.customerName}` : ''}
-                    {record.vehicle ? ` · ${record.vehicle}` : ''}
-                  </span>
-                </div>
-                <strong>{formatMoney(record.total)}</strong>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </main>
   );
 }

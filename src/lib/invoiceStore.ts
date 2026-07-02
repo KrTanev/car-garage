@@ -10,7 +10,6 @@ import {
   runTransaction,
   addDoc,
   updateDoc,
-  deleteDoc,
   serverTimestamp,
   query,
   orderBy,
@@ -70,40 +69,48 @@ export async function updateInvoice(id: string, data: InvoiceData): Promise<void
   });
 }
 
+// Soft delete: marks the invoice as deleted instead of removing the
+// Firestore document. Keeps the record recoverable (manually, via the
+// Firestore console) and preserves it for any future audit/accounting
+// need — deleting from the UI just hides it from the table.
 export async function deleteInvoice(id: string): Promise<void> {
-  await deleteDoc(doc(db, 'invoices', id));
+  await updateDoc(doc(db, 'invoices', id), {
+    deletedAt: serverTimestamp(),
+  });
 }
 
 export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
   const q = query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(MAX_HISTORY));
   const snap = await getDocs(q);
-  return snap.docs.map((docSnap) => {
-    const data = docSnap.data();
-    const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
-    const updatedAt = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : undefined;
-    // Defensive defaults: invoices created before the full-data-model
-    // migration only have the old summary shape (number/vehicle/total,
-    // no items array). Falling back here means old rows render (blank/
-    // zero for fields they never had) instead of crashing the page — you
-    // can then just delete them from the table if they're stale test data.
-    return {
-      id: docSnap.id,
-      invoiceNumber: data.invoiceNumber ?? data.number ?? '',
-      date: data.date ?? '',
-      customerName: data.customerName ?? '',
-      customerPhone: data.customerPhone ?? '',
-      customerEmail: data.customerEmail ?? '',
-      vehicleMake: data.vehicleMake ?? data.vehicle ?? '',
-      vehicleModel: data.vehicleModel ?? '',
-      vehiclePlate: data.vehiclePlate ?? '',
-      vehicleVin: data.vehicleVin ?? '',
-      odometer: data.odometer ?? '',
-      items: Array.isArray(data.items) ? data.items : [],
-      laborCost: typeof data.laborCost === 'number' ? data.laborCost : (data.total ?? 0),
-      notes: data.notes ?? '',
-      createdBy: data.createdBy,
-      createdAt: createdAt.toISOString(),
-      updatedAt: updatedAt?.toISOString(),
-    };
-  });
+  return snap.docs
+    .filter((docSnap) => !docSnap.data().deletedAt)
+    .map((docSnap) => {
+      const data = docSnap.data();
+      const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
+      const updatedAt = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : undefined;
+      // Defensive defaults: invoices created before the full-data-model
+      // migration only have the old summary shape (number/vehicle/total,
+      // no items array). Falling back here means old rows render (blank/
+      // zero for fields they never had) instead of crashing the page — you
+      // can then just delete them from the table if they're stale test data.
+      return {
+        id: docSnap.id,
+        invoiceNumber: data.invoiceNumber ?? data.number ?? '',
+        date: data.date ?? '',
+        customerName: data.customerName ?? '',
+        customerPhone: data.customerPhone ?? '',
+        customerEmail: data.customerEmail ?? '',
+        vehicleMake: data.vehicleMake ?? data.vehicle ?? '',
+        vehicleModel: data.vehicleModel ?? '',
+        vehiclePlate: data.vehiclePlate ?? '',
+        vehicleVin: data.vehicleVin ?? '',
+        odometer: data.odometer ?? '',
+        items: Array.isArray(data.items) ? data.items : [],
+        laborCost: typeof data.laborCost === 'number' ? data.laborCost : (data.total ?? 0),
+        notes: data.notes ?? '',
+        createdBy: data.createdBy,
+        createdAt: createdAt.toISOString(),
+        updatedAt: updatedAt?.toISOString(),
+      };
+    });
 }

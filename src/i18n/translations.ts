@@ -89,6 +89,7 @@ export interface Translations {
     editAction: string;
     downloadAction: string;
     deleteAction: string;
+    deleteDialogTitle: string;
     deleteConfirm: (number: string) => string;
   };
   footer: {
@@ -234,7 +235,8 @@ const bg: Translations = {
     editAction: 'Редактирай',
     downloadAction: 'Изтегли',
     deleteAction: 'Изтрий',
-    deleteConfirm: (number) => `Изтриване на фактура ${number}? Това действие не може да бъде отменено.`,
+    deleteDialogTitle: 'Изтриване на фактура',
+    deleteConfirm: (number) => `Сигурни ли сте, че искате да изтриете фактура ${number}? Ще изчезне от този списък.`,
   },
   footer: {
     hoursTitle: 'Работно време',
@@ -383,7 +385,8 @@ const en: Translations = {
     editAction: 'Edit',
     downloadAction: 'Download',
     deleteAction: 'Delete',
-    deleteConfirm: (number) => `Delete invoice ${number}? This can't be undone.`,
+    deleteDialogTitle: 'Delete invoice',
+    deleteConfirm: (number) => `Are you sure you want to delete invoice ${number}? It will be removed from this list.`,
   },
   footer: {
     hoursTitle: 'Working hours',

@@ -11,17 +11,20 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Generated invoices. Readable/creatable/editable/deletable by any
-    // signed-in staff member — any account that exists is trusted, so one
-    // staffer can fix another's typo or remove a bad entry. The one thing
-    // nobody can do is reassign an invoice's createdBy to someone else.
+    // Generated invoices. Readable/creatable/editable by any signed-in
+    // staff member — any account that exists is trusted, so one staffer
+    // can fix another's typo. The one thing nobody can do is reassign an
+    // invoice's createdBy to someone else. "Deleting" from the app is a
+    // soft delete (an update that sets deletedAt) — hard delete is
+    // blocked entirely here, so data can only be truly removed by hand
+    // in the Firebase console, never by the client.
     match /invoices/{invoiceId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.createdBy == request.auth.uid;
       allow update: if request.auth != null
         && request.resource.data.createdBy == resource.data.createdBy;
-      allow delete: if request.auth != null;
+      allow delete: if false;
     }
 
     // Per-year invoice number counters (doc id = the year, e.g. "2026").

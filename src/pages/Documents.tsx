@@ -10,6 +10,7 @@ import {
 import { CAR_MAKES, CAR_MODELS, type CarMake } from '../data/carCatalog';
 import { useLanguage } from '../context/LanguageContext';
 import { downloadInvoicePdf } from '../pdf/downloadInvoicePdf';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import {
   getNextInvoiceNumber,
   createInvoice,
@@ -43,6 +44,7 @@ export function Documents() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [rowBusyId, setRowBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<InvoiceRecord | null>(null);
   // Tracks the raw <select> value ('', a known make/model, or 'other') —
   // decoupled from invoice.vehicleMake/vehicleModel because when "Other" is
   // selected, the select shows 'other' while the invoice holds whatever the
@@ -172,8 +174,13 @@ export function Documents() {
     }
   }
 
-  async function handleRowDelete(record: InvoiceRecord) {
-    if (!window.confirm(d.deleteConfirm(record.invoiceNumber))) return;
+  function requestDelete(record: InvoiceRecord) {
+    setDeleteTarget(record);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const record = deleteTarget;
     setRowBusyId(record.id);
     try {
       await deleteInvoice(record.id);
@@ -182,6 +189,7 @@ export function Documents() {
       console.error('Failed to delete invoice', err);
     } finally {
       setRowBusyId(null);
+      setDeleteTarget(null);
     }
   }
 
@@ -219,6 +227,7 @@ export function Documents() {
 
   if (view === 'list') {
     return (
+      <>
       <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
         <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
           <h1 className="text-[1.6rem] font-semibold text-text mb-3">{d.title}</h1>
@@ -297,7 +306,7 @@ export function Documents() {
                           type="button"
                           className="btn-icon-danger"
                           disabled={busy}
-                          onClick={() => handleRowDelete(record)}
+                          onClick={() => requestDelete(record)}
                           aria-label={d.deleteAction}
                           title={d.deleteAction}
                         >
@@ -312,6 +321,18 @@ export function Documents() {
           </div>
         )}
       </main>
+      {deleteTarget && (
+        <ConfirmDialog
+          title={d.deleteDialogTitle}
+          message={d.deleteConfirm(deleteTarget.invoiceNumber)}
+          confirmLabel={d.deleteAction}
+          cancelLabel={d.cancelButton}
+          busy={rowBusyId === deleteTarget.id}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+      </>
     );
   }
 

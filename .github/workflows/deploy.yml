@@ -27,6 +27,12 @@ jobs:
 
       - run: npm ci
       - run: npm run build
+        env:
+          # Add repo secrets (Settings → Secrets and variables → Actions)
+          # for any other VITE_* values the same way. Vite only inlines
+          # env vars prefixed VITE_ into the client bundle — anything
+          # else here is silently ignored, by design.
+          VITE_ACCESS_CODE: ${{ secrets.VITE_ACCESS_CODE }}
 
       - uses: actions/configure-pages@v6
         with:

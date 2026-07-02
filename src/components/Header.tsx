@@ -8,26 +8,33 @@ export function Header() {
   const { isAuthenticated, signOut } = useAuth();
   const { t } = useLanguage();
 
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `no-underline font-semibold text-[0.9rem] py-2 px-1 ${isActive ? 'text-text' : 'text-text-muted'}`;
+
   return (
-    <header className="site-header">
-      <div className="site-header-inner">
-        <Link to="/" className="site-header-logo" aria-label="Solid Cars">
+    <header className="bg-surface border-b border-border">
+      <div className="flex items-center justify-between flex-wrap gap-3 max-w-[960px] mx-auto p-4">
+        <Link to="/" className="no-underline text-inherit inline-flex" aria-label="Solid Cars">
           <Logo />
         </Link>
-        <nav className="site-nav">
-          <NavLink to="/" end>
+        <nav className="flex items-center gap-2 flex-wrap">
+          <NavLink to="/" end className={navLinkClass}>
             {t.nav.home}
           </NavLink>
-          <NavLink to="/about">{t.nav.about}</NavLink>
+          <NavLink to="/about" className={navLinkClass}>
+            {t.nav.about}
+          </NavLink>
           {isAuthenticated ? (
             <>
-              <NavLink to="/documents">{t.nav.documents}</NavLink>
-              <button type="button" className="secondary" onClick={signOut}>
+              <NavLink to="/documents" className={navLinkClass}>
+                {t.nav.documents}
+              </NavLink>
+              <button type="button" className="btn-nav" onClick={signOut}>
                 {t.nav.logout}
               </button>
             </>
           ) : (
-            <NavLink to="/login" className="secondary nav-cta">
+            <NavLink to="/login" className="btn-nav">
               {t.nav.login}
             </NavLink>
           )}

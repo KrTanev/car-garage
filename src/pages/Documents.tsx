@@ -219,47 +219,63 @@ export function Documents() {
 
   if (view === 'list') {
     return (
-      <main className="documents">
-        <header className="documents-header">
-          <h1>{d.title}</h1>
-          <button type="button" className="primary new-invoice-button" onClick={openNewInvoice}>
+      <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
+        <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
+          <h1 className="text-[1.6rem] font-semibold text-text mb-3">{d.title}</h1>
+          <button type="button" className="btn-primary w-auto" onClick={openNewInvoice}>
             {d.newInvoiceButton}
           </button>
         </header>
 
         {isLoadingHistory ? (
-          <p className="loading">…</p>
+          <p className="text-text-muted text-sm text-center py-10">…</p>
         ) : history.length === 0 ? (
-          <p className="table-empty">{d.tableEmpty}</p>
+          <p className="text-text-muted text-[0.9rem]">{d.tableEmpty}</p>
         ) : (
-          <div className="invoice-table-wrapper">
-            <table className="invoice-table">
+          <div className="overflow-x-auto border border-border rounded-card bg-surface">
+            <table className="w-full border-collapse text-[0.9rem]">
               <thead>
                 <tr>
-                  <th>{d.colNumber}</th>
-                  <th>{d.colDate}</th>
-                  <th>{d.colCustomer}</th>
-                  <th>{d.colVehicle}</th>
-                  <th>{d.colTotal}</th>
-                  <th>{d.colActions}</th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colNumber}
+                  </th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colDate}
+                  </th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colCustomer}
+                  </th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colVehicle}
+                  </th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colTotal}
+                  </th>
+                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                    {d.colActions}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {history.map((record) => {
                   const busy = rowBusyId === record.id;
                   return (
-                    <tr key={record.id}>
-                      <td>{record.invoiceNumber}</td>
-                      <td>{record.date}</td>
-                      <td>{record.customerName || '—'}</td>
-                      <td>
+                    <tr key={record.id} className="last:border-b-0 border-b border-border">
+                      <td className="py-2.5 px-3.5 whitespace-nowrap">{record.invoiceNumber}</td>
+                      <td className="py-2.5 px-3.5 whitespace-nowrap">{record.date}</td>
+                      <td className="py-2.5 px-3.5 whitespace-nowrap">
+                        {record.customerName || '—'}
+                      </td>
+                      <td className="py-2.5 px-3.5 whitespace-nowrap">
                         {[record.vehicleMake, record.vehicleModel].filter(Boolean).join(' ') || '—'}
                       </td>
-                      <td>{formatMoney(invoiceTotal(record))}</td>
-                      <td className="row-actions">
+                      <td className="py-2.5 px-3.5 whitespace-nowrap">
+                        {formatMoney(invoiceTotal(record))}
+                      </td>
+                      <td className="py-2.5 px-3.5 whitespace-nowrap flex gap-1.5">
                         <button
                           type="button"
-                          className="icon-button"
+                          className="btn-icon"
                           disabled={busy}
                           onClick={() => openEditInvoice(record)}
                           aria-label={d.editAction}
@@ -269,7 +285,7 @@ export function Documents() {
                         </button>
                         <button
                           type="button"
-                          className="icon-button"
+                          className="btn-icon"
                           disabled={busy}
                           onClick={() => handleRowDownload(record)}
                           aria-label={d.downloadAction}
@@ -279,7 +295,7 @@ export function Documents() {
                         </button>
                         <button
                           type="button"
-                          className="icon-button danger"
+                          className="btn-icon-danger"
                           disabled={busy}
                           onClick={() => handleRowDelete(record)}
                           aria-label={d.deleteAction}
@@ -300,26 +316,33 @@ export function Documents() {
   }
 
   return (
-    <main className="documents">
-      <header className="documents-header">
-        <h1>{editingId ? d.editInvoiceTitle(invoice.invoiceNumber) : d.newInvoiceTitle}</h1>
-        <button type="button" className="secondary" onClick={cancelForm}>
+    <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
+      <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
+        <h1 className="text-[1.6rem] font-semibold text-text mb-3">
+          {editingId ? d.editInvoiceTitle(invoice.invoiceNumber) : d.newInvoiceTitle}
+        </h1>
+        <button type="button" className="btn-secondary" onClick={cancelForm}>
           {d.cancelButton}
         </button>
       </header>
 
-      <form className="invoice-form" onSubmit={(e) => e.preventDefault()}>
-        <section>
-          <h2>{d.invoiceSection}</h2>
-          <div className="field-grid">
-            <label>
+      <form className="card w-full" onSubmit={(e) => e.preventDefault()}>
+        <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.invoiceSection}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
+            <label className="form-label">
               {d.invoiceNumber}
-              <input value={invoice.invoiceNumber} readOnly />
+              <input
+                className="form-input read-only:bg-surface read-only:text-text-muted"
+                value={invoice.invoiceNumber}
+                readOnly
+              />
             </label>
-            <label>
+            <label className="form-label">
               {d.date}
               <input
                 type="date"
+                className="form-input"
                 value={invoice.date}
                 onChange={(e) => updateField('date', e.target.value)}
               />
@@ -327,27 +350,30 @@ export function Documents() {
           </div>
         </section>
 
-        <section>
-          <h2>{d.customerSection}</h2>
-          <div className="field-grid">
-            <label>
+        <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.customerSection}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
+            <label className="form-label">
               {d.name}
               <input
+                className="form-input"
                 value={invoice.customerName}
                 onChange={(e) => updateField('customerName', e.target.value)}
               />
             </label>
-            <label>
+            <label className="form-label">
               {d.phone}
               <input
+                className="form-input"
                 value={invoice.customerPhone}
                 onChange={(e) => updateField('customerPhone', e.target.value)}
               />
             </label>
-            <label>
+            <label className="form-label">
               {d.email}
               <input
                 type="email"
+                className="form-input"
                 value={invoice.customerEmail}
                 onChange={(e) => updateField('customerEmail', e.target.value)}
               />
@@ -355,12 +381,16 @@ export function Documents() {
           </div>
         </section>
 
-        <section>
-          <h2>{d.vehicleSection}</h2>
-          <div className="field-grid">
-            <label>
+        <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.vehicleSection}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
+            <label className="form-label">
               {d.make}
-              <select value={makeChoice} onChange={(e) => handleMakeChange(e.target.value)}>
+              <select
+                className="form-input"
+                value={makeChoice}
+                onChange={(e) => handleMakeChange(e.target.value)}
+              >
                 <option value="">{d.selectMakePlaceholder}</option>
                 {CAR_MAKES.map((make) => (
                   <option key={make} value={make}>
@@ -371,17 +401,22 @@ export function Documents() {
               </select>
               {makeChoice === OTHER && (
                 <input
+                  className="form-input"
                   placeholder={d.otherMakePlaceholder}
                   value={invoice.vehicleMake}
                   onChange={(e) => updateField('vehicleMake', e.target.value)}
                 />
               )}
             </label>
-            <label>
+            <label className="form-label">
               {d.model}
               {knownMake ? (
                 <>
-                  <select value={modelChoice} onChange={(e) => handleModelChange(e.target.value)}>
+                  <select
+                    className="form-input"
+                    value={modelChoice}
+                    onChange={(e) => handleModelChange(e.target.value)}
+                  >
                     <option value="">{d.selectModelPlaceholder}</option>
                     {CAR_MODELS[knownMake].map((model) => (
                       <option key={model} value={model}>
@@ -392,6 +427,7 @@ export function Documents() {
                   </select>
                   {modelChoice === OTHER && (
                     <input
+                      className="form-input"
                       placeholder={d.otherModelPlaceholder}
                       value={invoice.vehicleModel}
                       onChange={(e) => updateField('vehicleModel', e.target.value)}
@@ -400,29 +436,33 @@ export function Documents() {
                 </>
               ) : (
                 <input
+                  className="form-input"
                   placeholder={d.otherModelPlaceholder}
                   value={invoice.vehicleModel}
                   onChange={(e) => updateField('vehicleModel', e.target.value)}
                 />
               )}
             </label>
-            <label>
+            <label className="form-label">
               {d.plate}
               <input
+                className="form-input"
                 value={invoice.vehiclePlate}
                 onChange={(e) => updateField('vehiclePlate', e.target.value)}
               />
             </label>
-            <label>
+            <label className="form-label">
               {d.vin}
               <input
+                className="form-input"
                 value={invoice.vehicleVin}
                 onChange={(e) => updateField('vehicleVin', e.target.value)}
               />
             </label>
-            <label>
+            <label className="form-label">
               {d.odometer}
               <input
+                className="form-input"
                 value={invoice.odometer}
                 onChange={(e) => updateField('odometer', e.target.value)}
               />
@@ -430,18 +470,19 @@ export function Documents() {
           </div>
         </section>
 
-        <section>
-          <h2>{d.workSection}</h2>
-          <div className="items-table">
-            <div className="items-header">
+        <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.workSection}</h2>
+          <div className="flex flex-col gap-2 mb-3">
+            <div className="grid grid-cols-[1fr_60px_90px_32px] gap-2 items-center text-xs text-text-muted uppercase tracking-[0.3px]">
               <span>{t.pdf.descriptionCol}</span>
               <span>{d.qty}</span>
               <span>{d.unitPrice}</span>
               <span></span>
             </div>
             {invoice.items.map((item) => (
-              <div className="items-row" key={item.id}>
+              <div className="grid grid-cols-[1fr_60px_90px_32px] gap-2 items-center" key={item.id}>
                 <input
+                  className="form-input"
                   placeholder={d.descriptionPlaceholder}
                   value={item.description}
                   onChange={(e) => updateItem(item.id, { description: e.target.value })}
@@ -449,6 +490,7 @@ export function Documents() {
                 <input
                   type="number"
                   min={0}
+                  className="form-input"
                   value={item.quantity}
                   onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })}
                 />
@@ -456,12 +498,13 @@ export function Documents() {
                   type="number"
                   min={0}
                   step="0.01"
+                  className="form-input"
                   value={item.unitPrice}
                   onChange={(e) => updateItem(item.id, { unitPrice: Number(e.target.value) })}
                 />
                 <button
                   type="button"
-                  className="icon-button danger"
+                  className="btn-icon-danger"
                   onClick={() => removeItem(item.id)}
                   aria-label={d.removeItem}
                 >
@@ -470,46 +513,48 @@ export function Documents() {
               </div>
             ))}
           </div>
-          <button type="button" className="secondary" onClick={addItem}>
+          <button type="button" className="btn-secondary" onClick={addItem}>
             {d.addItem}
           </button>
         </section>
 
-        <section>
-          <div className="field-grid">
-            <label>
+        <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
+            <label className="form-label">
               {d.laborCost}
               <input
                 type="number"
                 min={0}
                 step="0.01"
+                className="form-input"
                 value={invoice.laborCost}
                 onChange={(e) => updateField('laborCost', Number(e.target.value))}
               />
             </label>
           </div>
-          <label className="notes-label">
+          <label className="form-label mt-2">
             {d.notes}
             <textarea
               rows={3}
+              className="form-input"
               value={invoice.notes}
               onChange={(e) => updateField('notes', e.target.value)}
             />
           </label>
         </section>
 
-        <div className="totals-summary">
+        <div className="flex flex-col items-end gap-1 my-4 text-[0.95rem]">
           <span>{d.partsTotal(formatMoney(partsTotal(invoice.items)))}</span>
           <span>{d.laborTotal(formatMoney(invoice.laborCost || 0))}</span>
-          <strong>{d.total(formatMoney(invoiceTotal(invoice)))}</strong>
+          <strong className="text-[1.1rem]">{d.total(formatMoney(invoiceTotal(invoice)))}</strong>
         </div>
 
-        <div className="form-actions">
+        <div className="flex gap-3 [&>*]:flex-1 [&>*]:w-auto">
           {editingId ? (
             <>
               <button
                 type="button"
-                className="primary"
+                className="btn-primary"
                 disabled={isSaving}
                 onClick={handleSaveChanges}
               >
@@ -517,7 +562,7 @@ export function Documents() {
               </button>
               <button
                 type="button"
-                className="secondary"
+                className="btn-secondary"
                 disabled={isSaving}
                 onClick={handleDownloadCurrent}
               >
@@ -527,7 +572,7 @@ export function Documents() {
           ) : (
             <button
               type="button"
-              className="primary download-button"
+              className="btn-primary"
               disabled={isSaving}
               onClick={handleCreateAndDownload}
             >

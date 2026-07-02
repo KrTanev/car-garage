@@ -25,7 +25,7 @@ export function GarageMap() {
       center={GARAGE_COORDS}
       zoom={15}
       scrollWheelZoom={false}
-      className="garage-map"
+      className="w-full h-[280px] rounded-card border border-border z-0"
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

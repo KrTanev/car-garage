@@ -4,9 +4,9 @@ import { Footer } from './Footer';
 
 export function Layout() {
   return (
-    <div className="app-shell">
+    <div className="min-h-screen flex flex-col">
       <Header />
-      <div className="app-content">
+      <div className="flex-1">
         <Outlet />
       </div>
       <Footer />

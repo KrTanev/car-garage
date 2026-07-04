@@ -16,8 +16,6 @@ dist-ssr
 # ad-hoc verification scripts/output, not part of the app
 test-*.mjs
 test-*.pdf
-src/assets/logo-icon-transparent.png
-src/assets/logo-full-transparent.png
 
 # Editor directories and files
 .vscode/*

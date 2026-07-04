@@ -1,1 +1,12 @@
+if git diff --cached --name-only | grep -qE '^(package\.json|package-lock\.json)$'; then
+  ci_log="$(mktemp)"
+  if ! npm ci --dry-run > "$ci_log" 2>&1; then
+    cat "$ci_log"
+    rm -f "$ci_log"
+    echo "package-lock.json is out of sync with package.json — run 'npm install' and commit the updated lock file."
+    exit 1
+  fi
+  rm -f "$ci_log"
+fi
+
 npm run build

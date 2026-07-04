@@ -29,11 +29,28 @@ export const CAR_MAKES = [
 export type CarMake = (typeof CAR_MAKES)[number];
 
 export const CAR_MODELS: Record<CarMake, string[]> = {
-  Volkswagen: ['Golf', 'Polo', 'Passat', 'Tiguan', 'Touran', 'Jetta', 'T-Roc', 'Caddy'],
+  Volkswagen: [
+    'Golf',
+    'Polo',
+    'Passat',
+    'Tiguan',
+    'Touran',
+    'Jetta',
+    'T-Roc',
+    'Caddy',
+  ],
   Škoda: ['Octavia', 'Fabia', 'Superb', 'Kodiaq', 'Karoq', 'Rapid', 'Yeti'],
   Opel: ['Astra', 'Corsa', 'Insignia', 'Mokka', 'Zafira', 'Vectra'],
   BMW: ['1 Series', '3 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5'],
-  'Mercedes-Benz': ['A-Class', 'C-Class', 'E-Class', 'S-Class', 'GLC', 'GLE', 'Vito'],
+  'Mercedes-Benz': [
+    'A-Class',
+    'C-Class',
+    'E-Class',
+    'S-Class',
+    'GLC',
+    'GLE',
+    'Vito',
+  ],
   Audi: ['A1', 'A3', 'A4', 'A6', 'Q3', 'Q5', 'Q7'],
   Renault: ['Clio', 'Megane', 'Captur', 'Kadjar', 'Scenic', 'Laguna'],
   Peugeot: ['206', '208', '308', '2008', '3008', '508'],

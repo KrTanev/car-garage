@@ -3,13 +3,13 @@
 // src/i18n/translations.ts instead, keyed by the ids below.
 
 export const BUSINESS_INFO = {
-  name: 'Solid Cars',
+  name: 'Solid Auto',
   foundedYear: 2015,
-  phone: '+359 88 123 4567',
-  email: 'info@solidcars.example',
+  phone: 'N/A',
+  email: 'info@solidauto.example',
   // Street name only — city/country vary by language and live in
   // translations.ts (t.common.cityCountry). See Footer.tsx / About.tsx.
-  addressStreet: 'ul. Iskra 12',
+  addressStreet: 'Карлово',
 };
 
 export type HoursId = 'weekdays' | 'saturday' | 'sunday';
@@ -20,18 +20,45 @@ export const HOURS: { id: HoursId; time: string }[] = [
   { id: 'sunday', time: '—' },
 ];
 
-export type ServiceId = 'diagnostics' | 'brakes' | 'oilChange' | 'tires' | 'suspension' | 'engine';
+export type ServiceId =
+  // Routine maintenance
+  | 'oilChange'
+  | 'fluids'
+  | 'bulbs'
+  // Repairs
+  | 'diagnostics'
+  | 'engine'
+  | 'timingBelt'
+  | 'transmission'
+  | 'clutch'
+  | 'suspension'
+  | 'brakes'
+  | 'cooling'
+  | 'fuelSystem';
 
-// 'tires' intentionally excluded from display — kept in the ServiceId type
-// and translations in case it's added back later.
-export const SERVICE_IDS: ServiceId[] = [
-  'diagnostics',
-  'brakes',
+export const MAINTENANCE_SERVICE_IDS: ServiceId[] = [
   'oilChange',
-  'suspension',
+  'fluids',
+  'bulbs',
+];
+
+export const REPAIR_SERVICE_IDS: ServiceId[] = [
+  'diagnostics',
   'engine',
+  'timingBelt',
+  'transmission',
+  'clutch',
+  'suspension',
+  'brakes',
+  'cooling',
+  'fuelSystem',
 ];
 
 export type GalleryId = 'workshop' | 'diagnosticsBay' | 'team' | 'pickup';
 
-export const GALLERY_IDS: GalleryId[] = ['workshop', 'diagnosticsBay', 'team', 'pickup'];
+export const GALLERY_IDS: GalleryId[] = [
+  'workshop',
+  'diagnosticsBay',
+  'team',
+  'pickup',
+];

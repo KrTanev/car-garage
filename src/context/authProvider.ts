@@ -23,7 +23,11 @@ export interface AuthCredentials {
 
 export async function login(credentials: AuthCredentials): Promise<boolean> {
   try {
-    await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+    await signInWithEmailAndPassword(
+      auth,
+      credentials.email,
+      credentials.password,
+    );
     return true;
   } catch {
     // Wrong email/password, disabled account, unknown user, etc. — the UI
@@ -39,6 +43,8 @@ export async function logout(): Promise<void> {
 // Fires immediately with the current state, then again whenever sign-in
 // state changes (including Firebase restoring a persisted session on page
 // load). Returns the unsubscribe function.
-export function onAuthChange(callback: (user: User | null) => void): () => void {
+export function onAuthChange(
+  callback: (user: User | null) => void,
+): () => void {
   return onAuthStateChanged(auth, callback);
 }

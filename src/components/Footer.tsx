@@ -1,9 +1,12 @@
-import { BUSINESS_INFO, HOURS } from "../data/business";
-import { useLanguage } from "../context/LanguageContext";
-import logoIcon from "../assets/logo-icon.png";
+import { BUSINESS_INFO, HOURS } from '../data/business';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
+import logoIcon from '../assets/logo-icon.png';
+import logoIconDark from '../assets/logo-icon-dark.png';
 
 export function Footer() {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const year = new Date().getFullYear();
 
   return (
@@ -15,7 +18,10 @@ export function Footer() {
           </h3>
           <ul className="list-none m-0 p-0 flex flex-col gap-1 text-[0.9rem]">
             {HOURS.map((h) => (
-              <li key={h.id} className="flex justify-between gap-4 max-w-[240px]">
+              <li
+                key={h.id}
+                className="flex justify-between gap-4 max-w-[240px]"
+              >
                 <span>{t.footer.hours[h.id]}</span>
                 <span>{h.time}</span>
               </li>
@@ -28,8 +34,8 @@ export function Footer() {
           </h3>
           <p className="text-[0.9rem] mb-1.5">
             <a
-              href={`tel:${BUSINESS_INFO.phone.replace(/\s+/g, "")}`}
-              className="no-underline text-accent font-semibold"
+              href={`tel:${BUSINESS_INFO.phone.replace(/\s+/g, '')}`}
+              className="no-underline text-accent font-semibold transition-colors duration-150 hover:text-accent-dark hover:underline"
             >
               {BUSINESS_INFO.phone}
             </a>
@@ -39,7 +45,11 @@ export function Footer() {
           </p>
         </div>
         <div className="flex items-center sm:ml-auto">
-          <img src={logoIcon} alt={BUSINESS_INFO.name} className="h-10 w-auto opacity-90" />
+          <img
+            src={theme === 'dark' ? logoIconDark : logoIcon}
+            alt={BUSINESS_INFO.name}
+            className="h-10 w-auto opacity-90"
+          />
         </div>
       </div>
 

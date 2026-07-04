@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/* Dark mode is class-based (a `.dark` class on <html>), managed by
+   ThemeContext + a pre-paint script in index.html. This variant makes
+   `dark:` utilities follow that class instead of the OS media query. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Design tokens — the same palette this app has always used, now exposed
    as Tailwind theme colors so utilities like bg-accent / text-text-muted /
@@ -17,48 +22,196 @@
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Entrance animations. Every page's <main> remounts on route change, so the
+   base-layer rule below gives free cross-page transitions with zero JS. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  /* Dark palette: warm-tinted darks mirroring the cream light theme.
+     The accent flips from deep green (dark ink on light paper) to a
+     lighter green (light ink on dark paper), and accent-contrast flips
+     with it so button text keeps its contrast in both modes. */
+  .dark {
+    color-scheme: dark;
+    --color-text: #e9e7e0;
+    --color-text-muted: #a5a29a;
+    --color-bg: #191a17;
+    --color-surface: #232420;
+    --color-border: #3a3b34;
+    --color-accent: #52b788;
+    --color-accent-dark: #74c69d;
+    --color-accent-contrast: #0f2318;
+    --color-danger: #e0655d;
+  }
+
   body {
     @apply bg-bg text-text antialiased;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  /* Leaflet in dark mode: invert-filter the raster tiles and restyle the
+     white chrome (attribution bar, zoom buttons, popups) with our tokens. */
+  .dark .leaflet-tile {
+    filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg)
+      saturate(0.3) brightness(0.7);
+  }
+  .dark .leaflet-control-attribution {
+    background: rgba(35, 36, 32, 0.8) !important;
+    color: var(--color-text-muted) !important;
+  }
+  .dark .leaflet-control-attribution a {
+    color: var(--color-accent) !important;
+  }
+  .dark .leaflet-control-zoom a {
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+  }
+  .dark .leaflet-popup-content-wrapper,
+  .dark .leaflet-popup-tip {
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  main {
+    animation: page-in 0.3s ease both;
+  }
+
+  /* Respect users who prefer reduced motion: collapse all animations and
+     transitions to imperceptible durations instead of removing them, so
+     animation-driven end states still apply. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 /* A handful of genuinely repeated patterns (buttons, form fields, cards) —
    composed from utilities via @apply so components stay readable instead
    of repeating a dozen classes on every input/button. Everything else is
-   plain inline Tailwind utilities in the components themselves. */
+   plain inline Tailwind utilities in the components themselves.
+
+   All interactive classes share the same feel: a 150ms ease-out transition,
+   an accent-tinted hover, a subtle press (active) scale, and a visible
+   accent focus ring for keyboard users. */
 @layer components {
   .btn-primary {
-    @apply w-full inline-block text-center no-underline rounded-md bg-accent text-accent-contrast font-semibold py-2.5 px-4 cursor-pointer disabled:opacity-60 disabled:cursor-default;
+    @apply w-full inline-block text-center no-underline rounded-md bg-accent text-accent-contrast font-semibold py-2.5 px-4 cursor-pointer
+      transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2
+      not-disabled:hover:bg-accent-dark not-disabled:active:scale-[0.98]
+      disabled:opacity-60 disabled:cursor-default;
   }
   .btn-secondary {
-    @apply inline-block text-center no-underline rounded-md bg-transparent border border-border text-text font-semibold py-2.5 px-4 cursor-pointer disabled:opacity-60 disabled:cursor-default;
+    @apply inline-block text-center no-underline rounded-md bg-transparent border border-border text-text font-semibold py-2.5 px-4 cursor-pointer
+      transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2
+      not-disabled:hover:border-accent not-disabled:hover:text-accent-dark not-disabled:active:scale-[0.98]
+      disabled:opacity-60 disabled:cursor-default;
   }
   .btn-nav {
-    @apply inline-block text-center no-underline rounded-md border border-border bg-transparent text-text font-semibold text-[0.85rem] py-2 px-3.5 cursor-pointer;
+    @apply inline-block text-center no-underline rounded-md border border-border bg-transparent text-text font-semibold text-[0.85rem] py-2 px-3.5 cursor-pointer
+      transition-[background-color,border-color,color,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2
+      not-disabled:hover:border-accent not-disabled:hover:text-accent-dark
+      disabled:opacity-60 disabled:cursor-default;
   }
   .btn-icon {
-    @apply bg-transparent border border-border text-text-muted rounded-md py-1.5 px-2.5 cursor-pointer disabled:opacity-50 disabled:cursor-default;
+    @apply bg-transparent border border-border text-text-muted rounded-md py-1.5 px-2.5 cursor-pointer
+      transition-[background-color,border-color,color,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2
+      not-disabled:hover:border-accent not-disabled:hover:text-accent
+      disabled:opacity-50 disabled:cursor-default;
   }
   .btn-icon-danger {
-    @apply bg-transparent border border-border text-danger rounded-md py-1.5 px-2.5 cursor-pointer disabled:opacity-50 disabled:cursor-default;
+    @apply bg-transparent border border-border text-danger rounded-md py-1.5 px-2.5 cursor-pointer
+      transition-[background-color,border-color,color,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger focus-visible:outline-offset-2
+      not-disabled:hover:border-danger not-disabled:hover:bg-danger/5
+      disabled:opacity-50 disabled:cursor-default;
   }
   .btn-danger {
-    @apply w-full inline-block text-center no-underline rounded-md bg-danger text-accent-contrast font-semibold py-2.5 px-4 cursor-pointer disabled:opacity-60 disabled:cursor-default;
+    @apply w-full inline-block text-center no-underline rounded-md bg-danger text-white font-semibold py-2.5 px-4 cursor-pointer
+      transition-[background-color,border-color,color,transform,opacity] duration-150 ease-out
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-danger focus-visible:outline-offset-2
+      not-disabled:hover:bg-danger/90 not-disabled:active:scale-[0.98]
+      disabled:opacity-60 disabled:cursor-default;
   }
 
   .card {
     @apply bg-surface border border-border rounded-card p-5;
+  }
+  /* Opt-in hover lift for cards presented in grids (services, etc.). */
+  .card-lift {
+    @apply transition-[transform,box-shadow,border-color] duration-200 ease-out
+      hover:-translate-y-0.5 hover:shadow-md hover:border-accent/40;
   }
 
   .form-label {
     @apply flex flex-col gap-1 text-[0.85rem] text-text-muted mb-3.5;
   }
   .form-input {
-    @apply w-full rounded-md border border-border py-2.5 px-3 text-base text-text bg-bg focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1;
+    @apply w-full rounded-md border border-border py-2.5 px-3 text-base text-text bg-bg
+      transition-[border-color] duration-150
+      hover:border-text-muted/60
+      focus:outline focus:outline-2 focus:outline-accent focus:outline-offset-1;
   }
 
   .chip {
-    @apply inline-flex items-center bg-surface border border-border rounded-full py-2 px-4 text-[0.85rem] font-semibold text-text no-underline;
+    @apply inline-flex items-center bg-surface border border-border rounded-full py-2 px-4 text-[0.85rem] font-semibold text-text no-underline
+      transition-[border-color,color,background-color,transform] duration-150 ease-out
+      hover:border-accent hover:text-accent-dark hover:-translate-y-0.5
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2;
+  }
+
+  /* Modal entrance — used by ConfirmDialog. */
+  .backdrop-enter {
+    animation: backdrop-in 0.15s ease both;
+  }
+  .dialog-enter {
+    animation: dialog-in 0.2s ease both;
+  }
+
+  /* Small accent-colored loading spinner. */
+  .spinner {
+    @apply inline-block size-5 rounded-full border-2 border-border border-t-accent animate-spin;
   }
 }

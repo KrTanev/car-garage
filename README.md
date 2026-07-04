@@ -1,11 +1,11 @@
-# Solid Cars
+# Solid Auto
 
-Frontend-only web app for Solid Cars garage: a public landing page (logo,
+Frontend-only web app for Solid Auto garage: a public landing page (logo,
 location map, staff login) and a protected page where staff fill out a
 repair/service invoice and download it as a PDF. No backend — everything
 runs in the browser.
 
-**Stack:** Vite + React + TypeScript, `react-router-dom` (HashRouter),
+**Stack:** Vite + React + TypeScript, `react-router-dom` (BrowserRouter),
 `react-leaflet` (OpenStreetMap tiles), `@react-pdf/renderer`.
 
 ## Getting started
@@ -47,7 +47,7 @@ covers this app's usage comfortably):
    them into the Firestore **Rules** tab in the console, or run
    `firebase deploy --only firestore:rules` with the [Firebase
    CLI](https://firebase.google.com/docs/cli) (`npm install -g
-   firebase-tools`, `firebase login`, `firebase use --add`).
+firebase-tools`, `firebase login`, `firebase use --add`).
 6. **Project settings (gear icon) → General → Your apps → Add app → Web**.
    Copy the resulting config values — you'll need all six for the next step.
 
@@ -97,6 +97,7 @@ changes.
 ## Invoice PDF
 
 Fields and layout live in:
+
 - `src/types/invoice.ts` — data shape + `formatMoney` (currency display, currently EUR)
 - `src/pages/Documents.tsx` — the form
 - `src/pdf/InvoiceDocument.tsx` — the generated PDF layout
@@ -137,8 +138,30 @@ Deploys automatically to GitHub Pages on every push to `main` via
 2. Push to `main` (or merge a PR into it) — the workflow builds and deploys.
 3. Site will be live at `https://<your-github-username>.github.io/car-garage/`.
 
-The Vite `base` in `vite.config.ts` is set to `/car-garage/` to match that
-URL path — update it if the repo is ever renamed.
+The Vite `base` in `vite.config.ts` is `/car-garage/` during `npm run build`
+only (update it if the repo is ever renamed) — it's `/` in dev, so
+`npm run dev` serves at `http://localhost:5173` with no path prefix.
+
+## Routing
+
+Clean URLs (`/about`, not `/#/about`) via `BrowserRouter`, with
+`basename={import.meta.env.BASE_URL}` so it matches Vite's `base` in both
+dev and production automatically.
+
+GitHub Pages has no server-side rewrites, so a direct load of e.g.
+`/car-garage/about` would normally 404. Two files work around that (the
+[rafgraph spa-github-pages](https://github.com/rafgraph/spa-github-pages)
+technique):
+
+- `public/404.html` — GitHub Pages serves this for any unknown path; it
+  redirects to the site root with the original path encoded in the query
+  string.
+- The inline script at the top of `index.html`'s `<head>` — decodes that
+  query string back into the real path via `history.replaceState`, before
+  React Router reads the location.
+
+If the repo is ever renamed, update `pathSegmentsToKeep` in `public/404.html`
+to match the new number of path segments in the GitHub Pages base.
 
 ## Notes
 

@@ -7,17 +7,18 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 // Leaflet's default marker icon paths break under bundlers (Vite included)
 // because the URLs get rewritten. Re-point them at the bundled assets.
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })
+  ._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
 
-// Solid Cars garage location.
+// Solid Auto garage location.
 // TODO: update GARAGE_ADDRESS if the location ever changes.
 const GARAGE_COORDS: [number, number] = [42.644444, 24.800456];
-const GARAGE_ADDRESS = 'Solid Cars';
+const GARAGE_ADDRESS = 'Solid Auto';
 
 export function GarageMap() {
   return (

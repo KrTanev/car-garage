@@ -11,6 +11,7 @@ import { CAR_MAKES, CAR_MODELS, type CarMake } from '../data/carCatalog';
 import { useLanguage } from '../context/LanguageContext';
 import { downloadInvoicePdf } from '../pdf/downloadInvoicePdf';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Spinner } from '../components/Spinner';
 import {
   getNextInvoiceNumber,
   createInvoice,
@@ -54,7 +55,10 @@ export function Documents() {
   const { t } = useLanguage();
   const d = t.documents;
 
-  function updateField<K extends keyof InvoiceData>(key: K, value: InvoiceData[K]) {
+  function updateField<K extends keyof InvoiceData>(
+    key: K,
+    value: InvoiceData[K],
+  ) {
     setInvoice((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -109,7 +113,9 @@ export function Documents() {
     setInvoice(data);
     setMakeChoice(choiceFor(data.vehicleMake, CAR_MAKES));
     const knownMake = isCarMake(data.vehicleMake) ? data.vehicleMake : null;
-    setModelChoice(knownMake ? choiceFor(data.vehicleModel, CAR_MODELS[knownMake]) : '');
+    setModelChoice(
+      knownMake ? choiceFor(data.vehicleModel, CAR_MODELS[knownMake]) : '',
+    );
     setEditingId(record.id);
     setView('form');
   }
@@ -207,131 +213,155 @@ export function Documents() {
 
   const knownMake = isCarMake(makeChoice) ? makeChoice : null;
 
-  function updateItem(id: string, patch: Partial<InvoiceData['items'][number]>) {
+  function updateItem(
+    id: string,
+    patch: Partial<InvoiceData['items'][number]>,
+  ) {
     setInvoice((prev) => ({
       ...prev,
-      items: prev.items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+      items: prev.items.map((item) =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
     }));
   }
 
   function addItem() {
-    setInvoice((prev) => ({ ...prev, items: [...prev.items, emptyLineItem()] }));
+    setInvoice((prev) => ({
+      ...prev,
+      items: [...prev.items, emptyLineItem()],
+    }));
   }
 
   function removeItem(id: string) {
     setInvoice((prev) => ({
       ...prev,
-      items: prev.items.length > 1 ? prev.items.filter((item) => item.id !== id) : prev.items,
+      items:
+        prev.items.length > 1
+          ? prev.items.filter((item) => item.id !== id)
+          : prev.items,
     }));
   }
 
   if (view === 'list') {
     return (
       <>
-      <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
-        <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
-          <h1 className="text-[1.6rem] font-semibold text-text mb-3">{d.title}</h1>
-          <button type="button" className="btn-primary w-auto" onClick={openNewInvoice}>
-            {d.newInvoiceButton}
-          </button>
-        </header>
+        <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
+          <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
+            <h1 className="text-[1.6rem] font-semibold text-text">{d.title}</h1>
+            <button
+              type="button"
+              className="btn-primary w-auto"
+              onClick={openNewInvoice}
+            >
+              {d.newInvoiceButton}
+            </button>
+          </header>
 
-        {isLoadingHistory ? (
-          <p className="text-text-muted text-sm text-center py-10">…</p>
-        ) : history.length === 0 ? (
-          <p className="text-text-muted text-[0.9rem]">{d.tableEmpty}</p>
-        ) : (
-          <div className="overflow-x-auto border border-border rounded-card bg-surface">
-            <table className="w-full border-collapse text-[0.9rem]">
-              <thead>
-                <tr>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colNumber}
-                  </th>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colDate}
-                  </th>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colCustomer}
-                  </th>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colVehicle}
-                  </th>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colTotal}
-                  </th>
-                  <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
-                    {d.colActions}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((record) => {
-                  const busy = rowBusyId === record.id;
-                  return (
-                    <tr key={record.id} className="last:border-b-0 border-b border-border">
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">{record.invoiceNumber}</td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">{record.date}</td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">
-                        {record.customerName || '—'}
-                      </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">
-                        {[record.vehicleMake, record.vehicleModel].filter(Boolean).join(' ') || '—'}
-                      </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap">
-                        {formatMoney(invoiceTotal(record))}
-                      </td>
-                      <td className="py-2.5 px-3.5 whitespace-nowrap flex gap-1.5">
-                        <button
-                          type="button"
-                          className="btn-icon"
-                          disabled={busy}
-                          onClick={() => openEditInvoice(record)}
-                          aria-label={d.editAction}
-                          title={d.editAction}
-                        >
-                          ✎
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-icon"
-                          disabled={busy}
-                          onClick={() => handleRowDownload(record)}
-                          aria-label={d.downloadAction}
-                          title={d.downloadAction}
-                        >
-                          ⬇
-                        </button>
-                        <button
-                          type="button"
-                          className="btn-icon-danger"
-                          disabled={busy}
-                          onClick={() => requestDelete(record)}
-                          aria-label={d.deleteAction}
-                          title={d.deleteAction}
-                        >
-                          ✕
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {isLoadingHistory ? (
+            <Spinner />
+          ) : history.length === 0 ? (
+            <p className="text-text-muted text-[0.9rem]">{d.tableEmpty}</p>
+          ) : (
+            <div className="overflow-x-auto border border-border rounded-card bg-surface">
+              <table className="w-full border-collapse text-[0.9rem]">
+                <thead>
+                  <tr>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colNumber}
+                    </th>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colDate}
+                    </th>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colCustomer}
+                    </th>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colVehicle}
+                    </th>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colTotal}
+                    </th>
+                    <th className="py-2.5 px-3.5 text-left whitespace-nowrap text-[0.75rem] uppercase tracking-[0.3px] text-text-muted border-b border-border">
+                      {d.colActions}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((record) => {
+                    const busy = rowBusyId === record.id;
+                    return (
+                      <tr
+                        key={record.id}
+                        className="last:border-b-0 border-b border-border transition-colors duration-150 hover:bg-bg/60"
+                      >
+                        <td className="py-2.5 px-3.5 whitespace-nowrap">
+                          {record.invoiceNumber}
+                        </td>
+                        <td className="py-2.5 px-3.5 whitespace-nowrap">
+                          {record.date}
+                        </td>
+                        <td className="py-2.5 px-3.5 whitespace-nowrap">
+                          {record.customerName || '—'}
+                        </td>
+                        <td className="py-2.5 px-3.5 whitespace-nowrap">
+                          {[record.vehicleMake, record.vehicleModel]
+                            .filter(Boolean)
+                            .join(' ') || '—'}
+                        </td>
+                        <td className="py-2.5 px-3.5 whitespace-nowrap">
+                          {formatMoney(invoiceTotal(record))}
+                        </td>
+                        <td className="py-2.5 px-3.5 whitespace-nowrap flex gap-1.5">
+                          <button
+                            type="button"
+                            className="btn-icon"
+                            disabled={busy}
+                            onClick={() => openEditInvoice(record)}
+                            aria-label={d.editAction}
+                            title={d.editAction}
+                          >
+                            ✎
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-icon"
+                            disabled={busy}
+                            onClick={() => handleRowDownload(record)}
+                            aria-label={d.downloadAction}
+                            title={d.downloadAction}
+                          >
+                            ⬇
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-icon-danger"
+                            disabled={busy}
+                            onClick={() => requestDelete(record)}
+                            aria-label={d.deleteAction}
+                            title={d.deleteAction}
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </main>
+        {deleteTarget && (
+          <ConfirmDialog
+            title={d.deleteDialogTitle}
+            message={d.deleteConfirm(deleteTarget.invoiceNumber)}
+            confirmLabel={d.deleteAction}
+            cancelLabel={d.cancelButton}
+            busy={rowBusyId === deleteTarget.id}
+            onConfirm={confirmDelete}
+            onCancel={() => setDeleteTarget(null)}
+          />
         )}
-      </main>
-      {deleteTarget && (
-        <ConfirmDialog
-          title={d.deleteDialogTitle}
-          message={d.deleteConfirm(deleteTarget.invoiceNumber)}
-          confirmLabel={d.deleteAction}
-          cancelLabel={d.cancelButton}
-          busy={rowBusyId === deleteTarget.id}
-          onConfirm={confirmDelete}
-          onCancel={() => setDeleteTarget(null)}
-        />
-      )}
       </>
     );
   }
@@ -339,8 +369,10 @@ export function Documents() {
   return (
     <main className="max-w-[880px] mx-auto px-4 pt-6 pb-16">
       <header className="flex items-center justify-between flex-wrap gap-3 mb-5">
-        <h1 className="text-[1.6rem] font-semibold text-text mb-3">
-          {editingId ? d.editInvoiceTitle(invoice.invoiceNumber) : d.newInvoiceTitle}
+        <h1 className="text-[1.6rem] font-semibold text-text">
+          {editingId
+            ? d.editInvoiceTitle(invoice.invoiceNumber)
+            : d.newInvoiceTitle}
         </h1>
         <button type="button" className="btn-secondary" onClick={cancelForm}>
           {d.cancelButton}
@@ -349,7 +381,9 @@ export function Documents() {
 
       <form className="card w-full" onSubmit={(e) => e.preventDefault()}>
         <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
-          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.invoiceSection}</h2>
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">
+            {d.invoiceSection}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
             <label className="form-label">
               {d.invoiceNumber}
@@ -372,7 +406,9 @@ export function Documents() {
         </section>
 
         <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
-          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.customerSection}</h2>
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">
+            {d.customerSection}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
             <label className="form-label">
               {d.name}
@@ -403,7 +439,9 @@ export function Documents() {
         </section>
 
         <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
-          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.vehicleSection}</h2>
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">
+            {d.vehicleSection}
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
             <label className="form-label">
               {d.make}
@@ -451,7 +489,9 @@ export function Documents() {
                       className="form-input"
                       placeholder={d.otherModelPlaceholder}
                       value={invoice.vehicleModel}
-                      onChange={(e) => updateField('vehicleModel', e.target.value)}
+                      onChange={(e) =>
+                        updateField('vehicleModel', e.target.value)
+                      }
                     />
                   )}
                 </>
@@ -492,7 +532,9 @@ export function Documents() {
         </section>
 
         <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
-          <h2 className="text-[1.1rem] font-semibold text-text mb-3">{d.workSection}</h2>
+          <h2 className="text-[1.1rem] font-semibold text-text mb-3">
+            {d.workSection}
+          </h2>
           <div className="flex flex-col gap-2 mb-3">
             <div className="grid grid-cols-[1fr_60px_90px_32px] gap-2 items-center text-xs text-text-muted uppercase tracking-[0.3px]">
               <span>{t.pdf.descriptionCol}</span>
@@ -501,19 +543,26 @@ export function Documents() {
               <span></span>
             </div>
             {invoice.items.map((item) => (
-              <div className="grid grid-cols-[1fr_60px_90px_32px] gap-2 items-center" key={item.id}>
+              <div
+                className="grid grid-cols-[1fr_60px_90px_32px] gap-2 items-center"
+                key={item.id}
+              >
                 <input
                   className="form-input"
                   placeholder={d.descriptionPlaceholder}
                   value={item.description}
-                  onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                  onChange={(e) =>
+                    updateItem(item.id, { description: e.target.value })
+                  }
                 />
                 <input
                   type="number"
                   min={0}
                   className="form-input"
                   value={item.quantity}
-                  onChange={(e) => updateItem(item.id, { quantity: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateItem(item.id, { quantity: Number(e.target.value) })
+                  }
                 />
                 <input
                   type="number"
@@ -521,7 +570,9 @@ export function Documents() {
                   step="0.01"
                   className="form-input"
                   value={item.unitPrice}
-                  onChange={(e) => updateItem(item.id, { unitPrice: Number(e.target.value) })}
+                  onChange={(e) =>
+                    updateItem(item.id, { unitPrice: Number(e.target.value) })
+                  }
                 />
                 <button
                   type="button"
@@ -549,7 +600,9 @@ export function Documents() {
                 step="0.01"
                 className="form-input"
                 value={invoice.laborCost}
-                onChange={(e) => updateField('laborCost', Number(e.target.value))}
+                onChange={(e) =>
+                  updateField('laborCost', Number(e.target.value))
+                }
               />
             </label>
           </div>
@@ -567,7 +620,9 @@ export function Documents() {
         <div className="flex flex-col items-end gap-1 my-4 text-[0.95rem]">
           <span>{d.partsTotal(formatMoney(partsTotal(invoice.items)))}</span>
           <span>{d.laborTotal(formatMoney(invoice.laborCost || 0))}</span>
-          <strong className="text-[1.1rem]">{d.total(formatMoney(invoiceTotal(invoice)))}</strong>
+          <strong className="text-[1.1rem]">
+            {d.total(formatMoney(invoiceTotal(invoice)))}
+          </strong>
         </div>
 
         <div className="flex gap-3 [&>*]:flex-1 [&>*]:w-auto">

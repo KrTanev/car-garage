@@ -21,7 +21,6 @@ export interface Translations {
   home: {
     heroTitle: string;
     heroSubtitle: string;
-    establishedBadge: (year: number) => string;
     callCta: string;
     aboutCta: string;
     findUs: string;
@@ -34,8 +33,9 @@ export interface Translations {
   };
   about: {
     title: (name: string) => string;
-    intro: (foundedYear: number, years: number) => string;
-    servicesTitle: string;
+    intro: string;
+    maintenanceTitle: string;
+    repairsTitle: string;
     galleryTitle: string;
     services: Record<ServiceId, ServiceCopy>;
     gallery: Record<GalleryId, string>;
@@ -136,7 +136,6 @@ const bg: Translations = {
   home: {
     heroTitle: 'Сервизът, на който можете да разчитате',
     heroSubtitle: 'Професионален ремонт и поддръжка на автомобили в Карлово.',
-    establishedBadge: (year) => `От ${year} г. на пазара`,
     callCta: 'Обадете се',
     aboutCta: 'Научете повече',
     findUs: 'Намерете ни',
@@ -149,34 +148,68 @@ const bg: Translations = {
   },
   about: {
     title: (name) => `За ${name}`,
-    intro: (foundedYear, years) =>
-      `Поправяме автомобили в Карлово от ${foundedYear} г. — това са ${years} години грижа за автомобилите на нашите клиенти. От рутинна поддръжка до пълни ремонти, се отнасяме към всяка кола като към своя.`,
-    servicesTitle: 'Услуги',
+    intro:
+      'От рутинна поддръжка до пълни ремонти, се отнасяме към всяка кола като към своя. Разполагаме със съвременна диагностика и главен механик, за да получите бърз и надежден сервиз.',
+    maintenanceTitle: 'Поддръжка',
+    repairsTitle: 'Ремонти',
     galleryTitle: 'Галерия',
     services: {
-      diagnostics: {
-        title: 'Диагностика',
-        description: 'Пълна компютърна диагностика за бързо откриване на проблема, преди да стане скъп.',
-      },
-      brakes: {
-        title: 'Спирачки',
-        description: 'Преглед и ремонт на накладки, дискове и цялата спирачна система.',
-      },
       oilChange: {
         title: 'Смяна на масло',
-        description: 'Смяна на масло и филтър за всички марки и модели, докато чакате.',
+        description:
+          'Смяна на масло и филтър за всички марки и модели, докато чакате.',
       },
-      tires: {
-        title: 'Гуми',
-        description: 'Монтаж, баланс и сезонна смяна на гуми.',
+      fluids: {
+        title: 'Смяна на течности',
+        description:
+          'Доливане и смяна на антифриз, спирачна течност и други работни течности по график.',
+      },
+      bulbs: {
+        title: 'Крушки и осветление',
+        description: 'Смяна на крушки за фарове, стопове и мигачи.',
+      },
+      diagnostics: {
+        title: 'Диагностика',
+        description:
+          'Пълна компютърна диагностика за бързо откриване на проблема, преди да стане скъп.',
+      },
+      engine: {
+        title: 'Ремонт на двигател',
+        description:
+          'От малки поправки до пълно основно ремонтиране на двигателя.',
+      },
+      timingBelt: {
+        title: 'Смяна на ангренажен ремък',
+        description:
+          'Смяна на ангренажен комплект навреме, преди да доведе до по-сериозна повреда.',
+      },
+      transmission: {
+        title: 'Ремонт на скоростна кутия',
+        description:
+          'Диагностика и ремонт на ръчни и автоматични скоростни кутии.',
+      },
+      clutch: {
+        title: 'Смяна на съединител',
+        description:
+          'Смяна на съединител при пробуксуване, вибрации или трудно превключване.',
       },
       suspension: {
         title: 'Окачване',
         description: 'Амортисьори, стойки и пълен ремонт на окачването.',
       },
-      engine: {
-        title: 'Ремонт на двигател',
-        description: 'От малки поправки до пълно основно ремонтиране на двигателя.',
+      brakes: {
+        title: 'Спирачки',
+        description:
+          'Преглед и ремонт на накладки, дискове и цялата спирачна система.',
+      },
+      cooling: {
+        title: 'Охладителна система',
+        description:
+          'Ремонт на радиатор, термостат и водна помпа, за да не прегрява двигателят.',
+      },
+      fuelSystem: {
+        title: 'Горивна система',
+        description: 'Проверка и ремонт на инжектори, горивна помпа и филтри.',
       },
     },
     gallery: {
@@ -236,7 +269,8 @@ const bg: Translations = {
     downloadAction: 'Изтегли',
     deleteAction: 'Изтрий',
     deleteDialogTitle: 'Изтриване на фактура',
-    deleteConfirm: (number) => `Сигурни ли сте, че искате да изтриете фактура ${number}? Ще изчезне от този списък.`,
+    deleteConfirm: (number) =>
+      `Сигурни ли сте, че искате да изтриете фактура ${number}? Ще изчезне от този списък.`,
   },
   footer: {
     hoursTitle: 'Работно време',
@@ -286,7 +320,6 @@ const en: Translations = {
   home: {
     heroTitle: 'The garage you can rely on',
     heroSubtitle: 'Professional car repair and maintenance in Karlovo.',
-    establishedBadge: (year) => `Serving since ${year}`,
     callCta: 'Call us',
     aboutCta: 'Learn more',
     findUs: 'Find us',
@@ -299,34 +332,66 @@ const en: Translations = {
   },
   about: {
     title: (name) => `About ${name}`,
-    intro: (foundedYear, years) =>
-      `We've been fixing cars in Karlovo since ${foundedYear} — that's ${years} years of keeping our customers' vehicles running right. From routine maintenance to full repairs, we treat every car like it's our own.`,
-    servicesTitle: 'Services',
+    intro:
+      "From routine maintenance to full repairs, we treat every car like it's our own. Our team of experienced head mechanic uses modern diagnostic equipment to get you back on the road quickly and reliably.",
+    maintenanceTitle: 'Maintenance',
+    repairsTitle: 'Repairs',
     galleryTitle: 'Gallery',
     services: {
-      diagnostics: {
-        title: 'Diagnostics',
-        description: 'Full computer diagnostics to pinpoint issues fast, before they become expensive ones.',
-      },
-      brakes: {
-        title: 'Brakes',
-        description: 'Pad, disc, and full brake system inspection and repair.',
-      },
       oilChange: {
         title: 'Oil change',
-        description: 'Oil and filter changes for all makes and models, done while you wait.',
+        description:
+          'Oil and filter changes for all makes and models, done while you wait.',
       },
-      tires: {
-        title: 'Tires',
-        description: 'Tire fitting, balancing, and seasonal changeovers.',
+      fluids: {
+        title: 'Fluid top-offs & changes',
+        description:
+          'Coolant, brake fluid, and other fluids topped up or changed on schedule.',
+      },
+      bulbs: {
+        title: 'Bulbs & lighting',
+        description:
+          'Headlight, brake light, and indicator bulb replacement.',
+      },
+      diagnostics: {
+        title: 'Diagnostics',
+        description:
+          'Full computer diagnostics to pinpoint issues fast, before they become expensive ones.',
+      },
+      engine: {
+        title: 'Engine repair',
+        description: 'From minor fixes to full engine overhauls.',
+      },
+      timingBelt: {
+        title: 'Timing belt replacement',
+        description:
+          'Timely timing belt kit replacement, before it causes serious engine damage.',
+      },
+      transmission: {
+        title: 'Transmission repair',
+        description:
+          'Diagnosis and repair for both manual and automatic transmissions.',
+      },
+      clutch: {
+        title: 'Clutch replacement',
+        description: 'Clutch replacement for slipping, vibration, or hard shifting.',
       },
       suspension: {
         title: 'Suspension',
         description: 'Shocks, struts, and full suspension repair.',
       },
-      engine: {
-        title: 'Engine repair',
-        description: 'From minor fixes to full engine overhauls.',
+      brakes: {
+        title: 'Brakes',
+        description: 'Pad, disc, and full brake system inspection and repair.',
+      },
+      cooling: {
+        title: 'Cooling system',
+        description:
+          'Radiator, thermostat, and water pump repair to keep the engine from overheating.',
+      },
+      fuelSystem: {
+        title: 'Fuel system',
+        description: 'Injector, fuel pump, and filter inspection and repair.',
       },
     },
     gallery: {
@@ -386,7 +451,8 @@ const en: Translations = {
     downloadAction: 'Download',
     deleteAction: 'Delete',
     deleteDialogTitle: 'Delete invoice',
-    deleteConfirm: (number) => `Are you sure you want to delete invoice ${number}? It will be removed from this list.`,
+    deleteConfirm: (number) =>
+      `Are you sure you want to delete invoice ${number}? It will be removed from this list.`,
   },
   footer: {
     hoursTitle: 'Working hours',

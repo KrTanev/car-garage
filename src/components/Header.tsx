@@ -1,6 +1,7 @@
 import { NavLink, Link } from 'react-router-dom';
 import { Logo } from './Logo';
 import { LanguageToggle } from './LanguageToggle';
+import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -9,12 +10,20 @@ export function Header() {
   const { t } = useLanguage();
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `no-underline font-semibold text-[0.9rem] py-2 px-1 ${isActive ? 'text-text' : 'text-text-muted'}`;
+    `relative no-underline font-semibold text-[0.9rem] py-2 px-1 transition-colors duration-150 hover:text-accent-dark ${
+      isActive
+        ? 'text-accent-dark after:absolute after:inset-x-1 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-accent'
+        : 'text-text-muted'
+    }`;
 
   return (
-    <header className="bg-surface border-b border-border">
+    <header className="sticky top-0 z-40 bg-surface/85 backdrop-blur-md border-b border-border">
       <div className="flex items-center justify-between flex-wrap gap-3 max-w-[960px] mx-auto p-4">
-        <Link to="/" className="no-underline text-inherit inline-flex" aria-label="Solid Cars">
+        <Link
+          to="/"
+          className="no-underline text-inherit inline-flex"
+          aria-label="Solid Auto"
+        >
           <Logo />
         </Link>
         <nav className="flex items-center gap-2 flex-wrap">
@@ -38,6 +47,7 @@ export function Header() {
               {t.nav.login}
             </NavLink>
           )}
+          <ThemeToggle />
           <LanguageToggle />
         </nav>
       </div>

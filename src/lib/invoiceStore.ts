@@ -62,7 +62,10 @@ export async function createInvoice(data: InvoiceData): Promise<string> {
   return docRef.id;
 }
 
-export async function updateInvoice(id: string, data: InvoiceData): Promise<void> {
+export async function updateInvoice(
+  id: string,
+  data: InvoiceData,
+): Promise<void> {
   await updateDoc(doc(db, 'invoices', id), {
     ...data,
     updatedAt: serverTimestamp(),
@@ -80,14 +83,24 @@ export async function deleteInvoice(id: string): Promise<void> {
 }
 
 export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
-  const q = query(collection(db, 'invoices'), orderBy('createdAt', 'desc'), limit(MAX_HISTORY));
+  const q = query(
+    collection(db, 'invoices'),
+    orderBy('createdAt', 'desc'),
+    limit(MAX_HISTORY),
+  );
   const snap = await getDocs(q);
   return snap.docs
     .filter((docSnap) => !docSnap.data().deletedAt)
     .map((docSnap) => {
       const data = docSnap.data();
-      const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
-      const updatedAt = data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : undefined;
+      const createdAt =
+        data.createdAt instanceof Timestamp
+          ? data.createdAt.toDate()
+          : new Date();
+      const updatedAt =
+        data.updatedAt instanceof Timestamp
+          ? data.updatedAt.toDate()
+          : undefined;
       // Defensive defaults: invoices created before the full-data-model
       // migration only have the old summary shape (number/vehicle/total,
       // no items array). Falling back here means old rows render (blank/
@@ -106,7 +119,10 @@ export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
         vehicleVin: data.vehicleVin ?? '',
         odometer: data.odometer ?? '',
         items: Array.isArray(data.items) ? data.items : [],
-        laborCost: typeof data.laborCost === 'number' ? data.laborCost : (data.total ?? 0),
+        laborCost:
+          typeof data.laborCost === 'number'
+            ? data.laborCost
+            : (data.total ?? 0),
         notes: data.notes ?? '',
         createdBy: data.createdBy,
         createdAt: createdAt.toISOString(),

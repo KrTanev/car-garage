@@ -1,5 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { TRANSLATIONS, type Language, type Translations } from '../i18n/translations';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  TRANSLATIONS,
+  type Language,
+  type Translations,
+} from '../i18n/translations';
 
 const STORAGE_KEY = 'car-garage-lang';
 const DEFAULT_LANGUAGE: Language = 'bg';
@@ -11,7 +23,9 @@ interface LanguageContextValue {
   setLanguage: (lang: Language) => void;
 }
 
-const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+const LanguageContext = createContext<LanguageContextValue | undefined>(
+  undefined,
+);
 
 function readStoredLanguage(): Language {
   const stored = localStorage.getItem(STORAGE_KEY);
@@ -26,21 +40,34 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const setLanguage = useCallback((lang: Language) => setLanguageState(lang), []);
+  const setLanguage = useCallback(
+    (lang: Language) => setLanguageState(lang),
+    [],
+  );
   const toggleLanguage = useCallback(() => {
     setLanguageState((prev) => (prev === 'bg' ? 'en' : 'bg'));
   }, []);
 
   const value = useMemo(
-    () => ({ language, t: TRANSLATIONS[language], toggleLanguage, setLanguage }),
+    () => ({
+      language,
+      t: TRANSLATIONS[language],
+      toggleLanguage,
+      setLanguage,
+    }),
     [language, toggleLanguage, setLanguage],
   );
 
-  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
+  return (
+    <LanguageContext.Provider value={value}>
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
 export function useLanguage(): LanguageContextValue {
   const ctx = useContext(LanguageContext);
-  if (!ctx) throw new Error('useLanguage must be used within a LanguageProvider');
+  if (!ctx)
+    throw new Error('useLanguage must be used within a LanguageProvider');
   return ctx;
 }

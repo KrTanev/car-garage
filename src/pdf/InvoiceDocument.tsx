@@ -8,8 +8,17 @@ import { BUSINESS_INFO } from '../data/business';
 registerPdfFonts();
 
 const styles = StyleSheet.create({
-  page: { padding: 32, fontSize: 10, fontFamily: PDF_FONT_FAMILY, color: '#1a1a1a' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  page: {
+    padding: 32,
+    fontSize: 10,
+    fontFamily: PDF_FONT_FAMILY,
+    color: '#1a1a1a',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
   brand: { fontSize: 18, fontWeight: 700 },
   brandSub: { fontSize: 9, color: '#555', marginTop: 2 },
   invoiceMeta: { textAlign: 'right' },
@@ -41,7 +50,12 @@ const styles = StyleSheet.create({
   colPrice: { flex: 1, textAlign: 'right' },
   colTotal: { flex: 1, textAlign: 'right' },
   totalsBlock: { marginTop: 10, alignItems: 'flex-end' },
-  totalsRow: { flexDirection: 'row', width: 200, justifyContent: 'space-between', marginBottom: 2 },
+  totalsRow: {
+    flexDirection: 'row',
+    width: 200,
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
   grandTotalRow: {
     flexDirection: 'row',
     width: 200,
@@ -130,7 +144,9 @@ export function InvoiceDocument({ data, t }: InvoiceDocumentProps) {
               <Text style={styles.colDesc}>{item.description || '—'}</Text>
               <Text style={styles.colQty}>{item.quantity}</Text>
               <Text style={styles.colPrice}>{money(item.unitPrice)}</Text>
-              <Text style={styles.colTotal}>{money(item.quantity * item.unitPrice)}</Text>
+              <Text style={styles.colTotal}>
+                {money(item.quantity * item.unitPrice)}
+              </Text>
             </View>
           ))}
         </View>

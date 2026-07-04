@@ -29,7 +29,10 @@ declare global {
   var __firebaseEmulatorConnected__: boolean | undefined;
 }
 
-if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' && !globalThis.__firebaseEmulatorConnected__) {
+if (
+  import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true' &&
+  !globalThis.__firebaseEmulatorConnected__
+) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
   globalThis.__firebaseEmulatorConnected__ = true;

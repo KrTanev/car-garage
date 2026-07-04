@@ -8,7 +8,9 @@ export function LanguageToggle() {
       type="button"
       className="btn-nav"
       onClick={toggleLanguage}
-      aria-label={language === 'bg' ? 'Switch to English' : 'Превключи на български'}
+      aria-label={
+        language === 'bg' ? 'Switch to English' : 'Превключи на български'
+      }
     >
       {language === 'bg' ? 'BG' : 'EN'}
     </button>

@@ -156,10 +156,6 @@ export function InvoiceDocument({ data, t }: InvoiceDocumentProps) {
             <Text>{t.partsLabel}</Text>
             <Text>{money(parts)}</Text>
           </View>
-          <View style={styles.totalsRow}>
-            <Text>{t.laborLabel}</Text>
-            <Text>{money(data.laborCost || 0)}</Text>
-          </View>
           <View style={styles.grandTotalRow}>
             <Text>{t.totalLabel}</Text>
             <Text>{money(total)}</Text>

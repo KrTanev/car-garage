@@ -17,7 +17,6 @@ export interface InvoiceData {
   vehicleVin: string;
   odometer: string;
   items: InvoiceLineItem[];
-  laborCost: number;
   notes: string;
 }
 
@@ -40,7 +39,6 @@ export const emptyInvoice = (): InvoiceData => ({
   vehicleVin: '',
   odometer: '',
   items: [emptyLineItem()],
-  laborCost: 0,
   notes: '',
 });
 
@@ -48,7 +46,7 @@ export const partsTotal = (items: InvoiceLineItem[]): number =>
   items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
 export const invoiceTotal = (data: InvoiceData): number =>
-  partsTotal(data.items) + (data.laborCost || 0);
+  partsTotal(data.items);
 
 // Single source of truth for how money is displayed on the invoice (form
 // and PDF). Change the currency here if it ever needs to change again.

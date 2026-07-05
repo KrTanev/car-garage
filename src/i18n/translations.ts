@@ -75,10 +75,8 @@ export interface Translations {
     unitPrice: string;
     removeItem: string;
     addItem: string;
-    laborCost: string;
     notes: string;
     partsTotal: (amount: string) => string;
-    laborTotal: (amount: string) => string;
     total: (amount: string) => string;
     downloadButton: string;
     preparingPdf: string;
@@ -119,7 +117,6 @@ export interface Translations {
     unitPriceCol: string;
     totalCol: string;
     partsLabel: string;
-    laborLabel: string;
     totalLabel: string;
     notesLabel: string;
   };
@@ -257,10 +254,8 @@ const bg: Translations = {
     unitPrice: 'Ед. цена',
     removeItem: 'Премахни артикул',
     addItem: '+ Добави артикул',
-    laborCost: 'Труд',
     notes: 'Бележки',
     partsTotal: (amount) => `Части: ${amount}`,
-    laborTotal: (amount) => `Труд: ${amount}`,
     total: (amount) => `Общо: ${amount}`,
     downloadButton: 'Изтегли фактура PDF',
     preparingPdf: 'Подготовка на PDF…',
@@ -306,7 +301,6 @@ const bg: Translations = {
     unitPriceCol: 'Ед. цена',
     totalCol: 'Общо',
     partsLabel: 'Части',
-    laborLabel: 'Труд',
     totalLabel: 'Общо',
     notesLabel: 'Бележки',
   },
@@ -442,10 +436,8 @@ const en: Translations = {
     unitPrice: 'Unit price',
     removeItem: 'Remove line item',
     addItem: '+ Add line item',
-    laborCost: 'Labor cost',
     notes: 'Notes',
     partsTotal: (amount) => `Parts: ${amount}`,
-    laborTotal: (amount) => `Labor: ${amount}`,
     total: (amount) => `Total: ${amount}`,
     downloadButton: 'Download invoice PDF',
     preparingPdf: 'Preparing PDF…',
@@ -491,7 +483,6 @@ const en: Translations = {
     unitPriceCol: 'Unit price',
     totalCol: 'Total',
     partsLabel: 'Parts',
-    laborLabel: 'Labor',
     totalLabel: 'Total',
     notesLabel: 'Notes',
   },

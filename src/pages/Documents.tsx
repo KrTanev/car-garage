@@ -107,7 +107,6 @@ export function Documents() {
       vehicleVin: record.vehicleVin,
       odometer: record.odometer,
       items: record.items,
-      laborCost: record.laborCost,
       notes: record.notes,
     };
     setInvoice(data);
@@ -591,22 +590,7 @@ export function Documents() {
         </section>
 
         <section className="mb-5 pb-5 border-b border-border [&:last-of-type]:border-b-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4">
-            <label className="form-label">
-              {d.laborCost}
-              <input
-                type="number"
-                min={0}
-                step="0.01"
-                className="form-input"
-                value={invoice.laborCost}
-                onChange={(e) =>
-                  updateField('laborCost', Number(e.target.value))
-                }
-              />
-            </label>
-          </div>
-          <label className="form-label mt-2">
+          <label className="form-label">
             {d.notes}
             <textarea
               rows={3}
@@ -619,7 +603,6 @@ export function Documents() {
 
         <div className="flex flex-col items-end gap-1 my-4 text-[0.95rem]">
           <span>{d.partsTotal(formatMoney(partsTotal(invoice.items)))}</span>
-          <span>{d.laborTotal(formatMoney(invoice.laborCost || 0))}</span>
           <strong className="text-[1.1rem]">
             {d.total(formatMoney(invoiceTotal(invoice)))}
           </strong>

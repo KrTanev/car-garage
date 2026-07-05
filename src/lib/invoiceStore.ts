@@ -119,10 +119,6 @@ export async function getInvoiceHistory(): Promise<InvoiceRecord[]> {
         vehicleVin: data.vehicleVin ?? '',
         odometer: data.odometer ?? '',
         items: Array.isArray(data.items) ? data.items : [],
-        laborCost:
-          typeof data.laborCost === 'number'
-            ? data.laborCost
-            : (data.total ?? 0),
         notes: data.notes ?? '',
         createdBy: data.createdBy,
         createdAt: createdAt.toISOString(),

@@ -13,6 +13,7 @@ export interface Translations {
   };
   nav: {
     home: string;
+    services: string;
     about: string;
     documents: string;
     login: string;
@@ -34,11 +35,13 @@ export interface Translations {
   about: {
     title: (name: string) => string;
     intro: string;
+    galleryTitle: string;
+    gallery: Record<GalleryId, string>;
+  };
+  services: {
     maintenanceTitle: string;
     repairsTitle: string;
-    galleryTitle: string;
-    services: Record<ServiceId, ServiceCopy>;
-    gallery: Record<GalleryId, string>;
+    items: Record<ServiceId, ServiceCopy>;
   };
   documents: {
     title: string;
@@ -128,6 +131,7 @@ const bg: Translations = {
   },
   nav: {
     home: 'Начало',
+    services: 'Услуги',
     about: 'За нас',
     documents: 'Документи',
     login: 'Вход за персонал',
@@ -150,10 +154,18 @@ const bg: Translations = {
     title: (name) => `За ${name}`,
     intro:
       'От рутинна поддръжка до пълни ремонти, се отнасяме към всяка кола като към своя. Разполагаме със съвременна диагностика и главен механик, за да получите бърз и надежден сервиз.',
+    galleryTitle: 'Галерия',
+    gallery: {
+      workshop: 'Работилницата',
+      diagnosticsBay: 'Диагностичен бокс',
+      team: 'Екипът в действие',
+      pickup: 'Зона за получаване',
+    },
+  },
+  services: {
     maintenanceTitle: 'Поддръжка',
     repairsTitle: 'Ремонти',
-    galleryTitle: 'Галерия',
-    services: {
+    items: {
       oilChange: {
         title: 'Смяна на масло',
         description:
@@ -211,12 +223,6 @@ const bg: Translations = {
         title: 'Горивна система',
         description: 'Проверка и ремонт на инжектори, горивна помпа и филтри.',
       },
-    },
-    gallery: {
-      workshop: 'Работилницата',
-      diagnosticsBay: 'Диагностичен бокс',
-      team: 'Екипът в действие',
-      pickup: 'Зона за получаване',
     },
   },
   documents: {
@@ -312,6 +318,7 @@ const en: Translations = {
   },
   nav: {
     home: 'Home',
+    services: 'Services',
     about: 'About',
     documents: 'Documents',
     login: 'Staff login',
@@ -334,10 +341,18 @@ const en: Translations = {
     title: (name) => `About ${name}`,
     intro:
       "From routine maintenance to full repairs, we treat every car like it's our own. Our team of experienced head mechanic uses modern diagnostic equipment to get you back on the road quickly and reliably.",
+    galleryTitle: 'Gallery',
+    gallery: {
+      workshop: 'Workshop floor',
+      diagnosticsBay: 'Diagnostics bay',
+      team: 'The team at work',
+      pickup: 'Customer pickup area',
+    },
+  },
+  services: {
     maintenanceTitle: 'Maintenance',
     repairsTitle: 'Repairs',
-    galleryTitle: 'Gallery',
-    services: {
+    items: {
       oilChange: {
         title: 'Oil change',
         description:
@@ -393,12 +408,6 @@ const en: Translations = {
         title: 'Fuel system',
         description: 'Injector, fuel pump, and filter inspection and repair.',
       },
-    },
-    gallery: {
-      workshop: 'Workshop floor',
-      diagnosticsBay: 'Diagnostics bay',
-      team: 'The team at work',
-      pickup: 'Customer pickup area',
     },
   },
   documents: {

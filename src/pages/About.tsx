@@ -1,9 +1,4 @@
-import {
-  BUSINESS_INFO,
-  MAINTENANCE_SERVICE_IDS,
-  REPAIR_SERVICE_IDS,
-  GALLERY_IDS,
-} from '../data/business';
+import { BUSINESS_INFO, GALLERY_IDS } from '../data/business';
 import { useLanguage } from '../context/LanguageContext';
 
 export function About() {
@@ -19,38 +14,6 @@ export function About() {
         <p className="text-text font-semibold">
           {BUSINESS_INFO.addressStreet}, {t.common.cityCountry}
         </p>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-[1.1rem] font-semibold text-text mb-3">
-          {t.about.maintenanceTitle}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {MAINTENANCE_SERVICE_IDS.map((id) => (
-            <div className="card card-lift" key={id}>
-              <h3 className="text-base mb-1.5">{t.about.services[id].title}</h3>
-              <p className="text-text-muted text-[0.9rem] m-0">
-                {t.about.services[id].description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mb-10">
-        <h2 className="text-[1.1rem] font-semibold text-text mb-3">
-          {t.about.repairsTitle}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {REPAIR_SERVICE_IDS.map((id) => (
-            <div className="card card-lift" key={id}>
-              <h3 className="text-base mb-1.5">{t.about.services[id].title}</h3>
-              <p className="text-text-muted text-[0.9rem] m-0">
-                {t.about.services[id].description}
-              </p>
-            </div>
-          ))}
-        </div>
       </section>
 
       <section className="mb-10">

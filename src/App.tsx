@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { Spinner } from './components/Spinner';
 import { Home } from './pages/Home';
+import { Services } from './pages/Services';
 import { About } from './pages/About';
 import { Login } from './pages/Login';
 
@@ -31,6 +32,7 @@ function App() {
             <Routes>
               <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
+                <Route path="/services" element={<Services />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
                 <Route
